@@ -2,5818 +2,3139 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VOIDFALL — Ascension</title>
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1.0"
+/>
+
+<title>REALMFALL — Online Co-op RPG</title>
+
+<script src="/socket.io/socket.io.js"></script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
-
 * {
-    box-sizing: border-box;
-    user-select: none;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 :root {
-    --bg: #05060d;
-    --panel: #0d1020;
-    --panel2: #151a30;
-    --border: #343d63;
-    --purple: #8d6bff;
-    --blue: #55b7ff;
-    --red: #ff4268;
-    --gold: #ffc857;
-    --green: #55e69b;
-    --text: #edf1ff;
-    --muted: #8993b7;
+  --bg: #050711;
+  --panel: rgba(12, 16, 31, .92);
+  --panel2: rgba(20, 25, 46, .92);
+  --line: rgba(255,255,255,.1);
+  --text: #f4f7ff;
+  --muted: #9aa5c5;
+  --purple: #8b5cf6;
+  --cyan: #22d3ee;
+  --gold: #facc15;
+  --red: #ef4444;
+  --green: #22c55e;
 }
 
 html,
 body {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: var(--bg);
-    color: var(--text);
-    font-family: Rajdhani, sans-serif;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      #171334 0,
+      #080914 45%,
+      #03040a 100%
+    );
+  color: var(--text);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
-canvas {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-}
-
-/* =========================
-   GENERAL UI
-========================= */
-
-.screen {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-}
-
-.hidden {
-    display: none !important;
-}
-
-.panel,
-.menu {
-    width: min(1050px, 95vw);
-    max-height: 92vh;
-    overflow-y: auto;
-    padding: 32px;
-
-    background:
-        radial-gradient(circle at top,
-        rgba(141,107,255,.14),
-        transparent 40%),
-        linear-gradient(145deg,
-        rgba(21,26,48,.97),
-        rgba(6,8,17,.98));
-
-    border: 1px solid #414b75;
-    border-radius: 20px;
-
-    box-shadow:
-        0 30px 100px rgba(0,0,0,.8),
-        inset 0 0 40px rgba(141,107,255,.025);
-}
-
-.menu {
-    text-align: center;
-}
-
-.logo {
-    font-family: Orbitron, sans-serif;
-    font-weight: 900;
-    font-size: clamp(42px, 8vw, 80px);
-    letter-spacing: 9px;
-
-    color: #fff;
-
-    text-shadow:
-        0 0 10px #8d6bff,
-        0 0 35px rgba(141,107,255,.7),
-        0 0 80px rgba(141,107,255,.35);
-}
-
-.subtitle {
-    color: var(--muted);
-    letter-spacing: 7px;
-    margin-top: 5px;
-    margin-bottom: 35px;
-}
-
-h2,
-h3 {
-    font-family: Orbitron, sans-serif;
-    letter-spacing: 2px;
+button,
+input {
+  font: inherit;
 }
 
 button {
-    border: 1px solid #414b75;
-
-    background:
-        linear-gradient(
-            180deg,
-            #222946,
-            #111529
-        );
-
-    color: white;
-
-    padding: 13px 18px;
-
-    border-radius: 9px;
-
-    cursor: pointer;
-
-    font-family: Orbitron, sans-serif;
-    font-weight: 700;
-
-    transition:
-        transform .15s,
-        border-color .15s,
-        box-shadow .15s;
+  cursor: pointer;
 }
 
-button:hover {
-    transform: translateY(-2px);
-    border-color: var(--purple);
-    box-shadow: 0 0 25px rgba(141,107,255,.3);
+.hidden {
+  display: none !important;
 }
 
-button:active {
-    transform: translateY(1px);
+#app {
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 
-.primary {
-    width: 100%;
-    padding: 17px;
-    font-size: 17px;
+/* BACKGROUND */
 
-    background:
-        linear-gradient(
-            135deg,
-            #8d6bff,
-            #4c2bc2
-        );
-
-    border-color: #a895ff;
+.stars {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: .45;
+  background-image:
+    radial-gradient(
+      circle,
+      rgba(255,255,255,.7) 1px,
+      transparent 1px
+    );
+  background-size: 70px 70px;
+  animation: drift 25s linear infinite;
 }
 
-.menu-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-top: 12px;
+@keyframes drift {
+  from {
+    transform: translate(0,0);
+  }
+
+  to {
+    transform: translate(-70px,70px);
+  }
 }
 
-.tip {
-    color: var(--muted);
-    margin-top: 25px;
+/* MENU */
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 25px;
 }
 
-.close {
-    float: right;
+.menu-card {
+  width: min(560px, 94vw);
+  padding: 45px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(21,25,49,.97),
+      rgba(7,9,19,.97)
+    );
+  box-shadow:
+    0 30px 100px rgba(0,0,0,.65),
+    0 0 80px rgba(139,92,246,.12);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
 }
 
-/* =========================
-   HUD
-========================= */
-
-#hud {
-    position: fixed;
-    inset: 0;
-    z-index: 10;
-    pointer-events: none;
+.menu-card::before {
+  content: "";
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  top: -130px;
+  left: -130px;
+  background: var(--purple);
+  filter: blur(100px);
+  opacity: .16;
 }
 
-.hud-left {
-    position: absolute;
-    left: 22px;
-    top: 18px;
-    width: min(430px, 45vw);
+.logo {
+  font-size: clamp(42px,8vw,76px);
+  font-weight: 1000;
+  letter-spacing: .12em;
+  line-height: .95;
+  text-shadow:
+    0 0 25px rgba(139,92,246,.7);
 }
 
-.hud-right {
-    position: absolute;
-    right: 22px;
-    top: 20px;
-    text-align: right;
+.logo span {
+  color: var(--purple);
 }
 
-.player-hud {
-    position: absolute;
-    left: 22px;
-    bottom: 20px;
-    width: 270px;
+.subtitle {
+  margin-top: 15px;
+  color: var(--muted);
+  letter-spacing: .2em;
+  font-size: 12px;
+  text-transform: uppercase;
 }
 
-.hud-title {
-    font-family: Orbitron, sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: 2px;
+.name-input,
+.lobby-input {
+  width: 100%;
+  margin-top: 28px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.05);
+  color: white;
+  border-radius: 14px;
+  padding: 15px 17px;
+  outline: none;
+  transition: .2s;
 }
 
-.hud-small {
-    color: var(--muted);
+.name-input:focus,
+.lobby-input:focus {
+  border-color: var(--purple);
+  box-shadow:
+    0 0 0 3px
+    rgba(139,92,246,.13);
 }
 
-.coin {
-    color: var(--gold);
-    font-family: Orbitron;
-    font-weight: 700;
-    font-size: 18px;
+.menu-buttons {
+  display: grid;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.btn {
+  border: 0;
+  border-radius: 14px;
+  padding: 15px 18px;
+  color: white;
+  font-weight: 800;
+  letter-spacing: .04em;
+  transition:
+    transform .15s,
+    filter .15s,
+    box-shadow .15s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background:
+    linear-gradient(
+      135deg,
+      #8b5cf6,
+      #6366f1
+    );
+  box-shadow:
+    0 10px 30px
+    rgba(99,102,241,.25);
+}
+
+.btn-secondary {
+  background:
+    rgba(255,255,255,.07);
+  border: 1px solid var(--line);
+}
+
+.btn-danger {
+  background:
+    rgba(239,68,68,.15);
+  border: 1px solid rgba(239,68,68,.3);
+}
+
+.join-area {
+  margin-top: 15px;
+  display: none;
+}
+
+.join-area.active {
+  display: block;
+}
+
+.join-row {
+  display: flex;
+  gap: 10px;
+}
+
+.join-row input {
+  margin-top: 0;
+}
+
+/* LOBBY */
+
+#lobbyScreen {
+  align-items: center;
+}
+
+.lobby-card {
+  width: min(850px, 95vw);
+  padding: 35px;
+  border-radius: 25px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow:
+    0 30px 100px rgba(0,0,0,.6);
+}
+
+.lobby-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.lobby-title {
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.code-box {
+  margin-top: 25px;
+  border-radius: 18px;
+  padding: 25px;
+  text-align: center;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(139,92,246,.15),
+      rgba(34,211,238,.07)
+    );
+  border: 1px solid rgba(139,92,246,.25);
+}
+
+.code-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .18em;
+}
+
+.room-code {
+  font-size: 45px;
+  font-weight: 1000;
+  letter-spacing: .25em;
+  color: white;
+  margin-left: .25em;
+  margin-top: 7px;
+}
+
+.players {
+  display: grid;
+  grid-template-columns:
+    repeat(4,1fr);
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.player-slot {
+  min-height: 115px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.035);
+  border-radius: 17px;
+  padding: 17px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.player-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background:
+    linear-gradient(
+      135deg,
+      var(--purple),
+      var(--cyan)
+    );
+  display: grid;
+  place-items: center;
+  font-weight: 1000;
+  margin-bottom: 8px;
+}
+
+.empty-slot {
+  color: #5d6681;
+}
+
+.lobby-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.lobby-actions .btn {
+  flex: 1;
+}
+
+/* GAME */
+
+#gameScreen {
+  position: absolute;
+  inset: 0;
+}
+
+#gameCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(
+      circle at center,
+      #11152b,
+      #060711 75%
+    );
+}
+
+/* HUD */
+
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.top-left,
+.top-right,
+.bottom-left,
+.bottom-right {
+  position: absolute;
+  pointer-events: auto;
+}
+
+.top-left {
+  left: 18px;
+  top: 18px;
+}
+
+.top-right {
+  right: 18px;
+  top: 18px;
+}
+
+.bottom-left {
+  left: 18px;
+  bottom: 18px;
+}
+
+.bottom-right {
+  right: 18px;
+  bottom: 18px;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  background:
+    rgba(6,8,18,.84);
+  backdrop-filter: blur(12px);
+  border-radius: 15px;
+  box-shadow:
+    0 12px 40px rgba(0,0,0,.3);
+}
+
+/* PLAYER HUD */
+
+.player-panel {
+  width: 280px;
+  padding: 14px;
+}
+
+.player-name {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.level {
+  color: var(--purple);
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .bar {
-    width: 100%;
-    height: 15px;
-    margin-top: 5px;
-
-    background: #11152a;
-
-    border: 1px solid #343d60;
-    border-radius: 5px;
-
-    overflow: hidden;
+  height: 9px;
+  background: rgba(255,255,255,.08);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 8px;
 }
 
 .fill {
-    height: 100%;
-    width: 100%;
-    transition: width .12s;
+  height: 100%;
+  width: 50%;
+  transition: width .15s;
 }
 
-#bossHP {
-    background:
-        linear-gradient(
-            90deg,
-            #9d173d,
-            #ff4268
-        );
+.hp-fill {
+  background:
+    linear-gradient(
+      90deg,
+      #ef4444,
+      #fb7185
+    );
 }
 
-#playerHP {
-    background:
-        linear-gradient(
-            90deg,
-            #a7183e,
-            #ff4268
-        );
+.xp-fill {
+  background:
+    linear-gradient(
+      90deg,
+      #8b5cf6,
+      #c084fc
+    );
 }
 
-#mana {
-    background:
-        linear-gradient(
-            90deg,
-            #276ed1,
-            #55b7ff
-        );
+.energy-fill {
+  background:
+    linear-gradient(
+      90deg,
+      #06b6d4,
+      #22d3ee
+    );
 }
 
-.controls {
-    position: absolute;
-    right: 22px;
-    bottom: 20px;
-
-    text-align: right;
-
-    color: #8993b7;
+.bar-label {
+  margin-top: 5px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--muted);
 }
 
-#centerMessage {
-    position: absolute;
+/* FLOOR */
 
-    left: 50%;
-    top: 50%;
-
-    transform: translate(-50%, -50%);
-
-    font-family: Orbitron;
-    font-size: clamp(25px, 5vw, 65px);
-    font-weight: 900;
-
-    letter-spacing: 6px;
-
-    opacity: 0;
-
-    text-shadow:
-        0 0 25px currentColor,
-        0 0 60px currentColor;
-
-    transition: opacity .2s;
+.floor-panel {
+  padding: 13px 18px;
+  min-width: 190px;
+  text-align: center;
 }
 
-#damageFlash {
-    position: fixed;
-    inset: 0;
-
-    background: rgba(255,40,70,.4);
-
-    opacity: 0;
-
-    pointer-events: none;
-
-    z-index: 50;
+.floor-number {
+  font-size: 26px;
+  font-weight: 1000;
 }
 
-/* =========================
-   MAP
-========================= */
-.map-grid {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(5, minmax(130px, 1fr));
-    gap: 18px;
-    margin: 28px 0 24px;
-    padding: 26px;
-    border: 1px solid rgba(141,107,255,.28);
-    border-radius: 18px;
-    background: radial-gradient(circle at 50% 0%, rgba(141,107,255,.12), transparent 48%), linear-gradient(145deg, rgba(18,23,48,.96), rgba(5,8,18,.98));
-    box-shadow: inset 0 0 45px rgba(141,107,255,.05), 0 18px 50px rgba(0,0,0,.35);
+.floor-type {
+  color: var(--purple);
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
 }
 
-.map-grid::before {
-    content: "";
-    position: absolute;
-    inset: 14px;
-    border: 1px solid rgba(255,255,255,.045);
-    border-radius: 13px;
-    pointer-events: none;
+/* PARTY */
+
+.party-panel {
+  width: 220px;
+  padding: 13px;
 }
 
-.floor-node {
-    position: relative;
-    min-height: 112px;
-    padding: 14px 8px 12px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    border-radius: 15px;
-    background: linear-gradient(160deg, rgba(28,35,67,.95), rgba(9,13,28,.98));
-    border: 1px solid #343d62;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 20px rgba(0,0,0,.2);
-    transition: transform .2s, border-color .2s, box-shadow .2s, opacity .2s;
-    overflow: hidden;
+.party-title {
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  margin-bottom: 8px;
 }
-.floor-node::after { content: ""; position: absolute; left: 14%; right: 14%; bottom: 8px; height: 2px; background: linear-gradient(90deg, transparent, rgba(141,107,255,.45), transparent); }
-.floor-node:hover { transform: translateY(-4px); border-color: #7562c9; }
-.floor-node span { display:flex; align-items:center; justify-content:center; width:52px; height:52px; margin-bottom:8px; border-radius:50%; background:radial-gradient(circle, rgba(141,107,255,.22), rgba(8,11,25,.95) 70%); border:1px solid rgba(141,107,255,.35); font-size:25px; box-shadow:0 0 18px rgba(141,107,255,.12); }
-.floor-node.current { transform:scale(1.04); border-color:var(--purple); background:linear-gradient(160deg, rgba(52,39,94,.98), rgba(12,14,31,.98)); box-shadow:0 0 0 1px rgba(141,107,255,.18), 0 0 32px rgba(141,107,255,.3), inset 0 0 28px rgba(141,107,255,.08); }
-.floor-node.current span { border-color:rgba(141,107,255,.8); box-shadow:0 0 25px rgba(141,107,255,.4); }
-.floor-node.completed { opacity:.48; filter:saturate(.55); }
-.floor-node.completed span { border-color:rgba(85,230,155,.35); background:radial-gradient(circle, rgba(85,230,155,.14), rgba(8,11,25,.95) 70%); }
-.floor-node small { color:var(--muted); font-family:Orbitron,sans-serif; font-size:9px; letter-spacing:1.4px; }
-.map-legend { display:flex; justify-content:center; gap:18px; flex-wrap:wrap; margin:-8px 0 22px; color:var(--muted); font-size:13px; }
-.map-legend span { display:inline-flex; align-items:center; gap:7px; }
-.legend-dot { width:9px; height:9px; border-radius:50%; background:#343d62; }
-.legend-dot.current { background:var(--purple); box-shadow:0 0 10px var(--purple); }
-.legend-dot.completed { background:var(--green); }
 
-/* =========================
-   CARDS
-========================= */
+.party-member {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  font-size: 12px;
+}
 
-.card-grid {
-    display: grid;
+.party-member:last-child {
+  border-bottom: 0;
+}
 
-    grid-template-columns:
-        repeat(
-            auto-fit,
-            minmax(210px, 1fr)
-        );
+.party-hp {
+  color: #fb7185;
+}
 
-    gap: 14px;
+/* GOLD */
+
+.gold-panel {
+  padding: 10px 15px;
+  color: var(--gold);
+  font-weight: 900;
+}
+
+/* BOSS BAR */
+
+.boss-container {
+  position: absolute;
+  left: 50%;
+  top: 22px;
+  transform: translateX(-50%);
+  width: min(650px, 60vw);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .3s;
+}
+
+.boss-container.active {
+  opacity: 1;
+}
+
+.boss-name {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 1000;
+  letter-spacing: .08em;
+  text-shadow:
+    0 2px 15px black;
+}
+
+.boss-subtitle {
+  text-align: center;
+  font-size: 10px;
+  color: #b8c1dd;
+  text-transform: uppercase;
+  letter-spacing: .18em;
+}
+
+.boss-bar {
+  margin-top: 8px;
+  height: 16px;
+  border-radius: 99px;
+  padding: 3px;
+  background: #08090f;
+  border: 1px solid rgba(255,255,255,.18);
+}
+
+.boss-health {
+  height: 100%;
+  border-radius: 99px;
+  background:
+    linear-gradient(
+      90deg,
+      #ef4444,
+      #a855f7
+    );
+  transition: width .15s;
+}
+
+.phase {
+  text-align: center;
+  margin-top: 4px;
+  font-size: 10px;
+  color: #facc15;
+  font-weight: 900;
+}
+
+/* CONTROLS */
+
+.controls-panel {
+  padding: 12px 15px;
+  color: #9aa5c5;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.key {
+  display: inline-block;
+  min-width: 25px;
+  text-align: center;
+  padding: 2px 6px;
+  margin: 0 2px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.08);
+  color: white;
+  font-weight: 800;
+}
+
+/* HOTBAR */
+
+.hotbar {
+  display: flex;
+  gap: 8px;
+}
+
+.hotkey {
+  width: 62px;
+  height: 62px;
+  border-radius: 15px;
+  border: 1px solid rgba(255,255,255,.15);
+  background:
+    rgba(10,12,25,.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.3);
+}
+
+.hotkey-main {
+  font-size: 21px;
+  font-weight: 1000;
+}
+
+.hotkey-name {
+  font-size: 8px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* SHOP */
+
+#shopOverlay {
+  position: absolute;
+  inset: 0;
+  background:
+    rgba(2,3,9,.72);
+  backdrop-filter: blur(10px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+#shopOverlay.active {
+  display: flex;
+}
+
+.shop {
+  width: min(1050px, 94vw);
+  max-height: 90vh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 25px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(18,22,43,.98),
+      rgba(6,8,16,.98)
+    );
+  padding: 28px;
+  box-shadow:
+    0 40px 120px rgba(0,0,0,.7);
+}
+
+.shop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.shop-title {
+  font-size: 32px;
+  font-weight: 1000;
+}
+
+.shop-gold {
+  color: var(--gold);
+  font-weight: 900;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(4,1fr);
+  gap: 14px;
 }
 
 .card {
-    position: relative;
-
-    min-height: 220px;
-
-    padding: 18px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #1b203a,
-            #0c1020
-        );
-
-    border:
-        1px solid #3c466d;
-
-    border-radius: 13px;
-
-    transition: .2s;
+  min-height: 255px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.06),
+      rgba(255,255,255,.025)
+    );
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  transition: .2s;
 }
 
 .card:hover {
-    transform: translateY(-4px);
-
-    border-color: var(--purple);
-
-    box-shadow:
-        0 10px 30px rgba(141,107,255,.15);
+  transform: translateY(-5px);
+  border-color:
+    rgba(139,92,246,.55);
+  box-shadow:
+    0 15px 40px
+    rgba(139,92,246,.15);
 }
 
-.card-icon {
-    font-size: 40px;
-    margin: 12px 0;
+.card-rarity {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  font-weight: 1000;
 }
 
-.rarity {
-    font-family: Orbitron;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2px;
+.rarity-common {
+  color: #aeb7cc;
 }
 
-.common {
-    color: #c1c7dc;
+.rarity-rare {
+  color: #38bdf8;
 }
 
-.rare {
-    color: #55b7ff;
+.rarity-epic {
+  color: #c084fc;
 }
 
-.epic {
-    color: #b76cff;
+.rarity-mythic {
+  color: #fb7185;
 }
 
-.legendary {
-    color: #ffc857;
+.rarity-legendary {
+  color: #facc15;
 }
 
-.card p {
-    color: var(--muted);
-    line-height: 1.4;
+.rarity-secret {
+  color: #f43f5e;
+  text-shadow:
+    0 0 15px rgba(244,63,94,.6);
 }
 
-.stat-line {
-    display: flex;
-    justify-content: space-between;
-
-    padding: 7px 0;
-
-    border-bottom: 1px solid #252c49;
+.card-name {
+  margin-top: 15px;
+  font-size: 19px;
+  font-weight: 1000;
 }
 
-/* =========================
-   SHOP
-========================= */
+.card-description {
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  flex: 1;
+}
 
-.shop-grid {
-    display: grid;
+.card-price {
+  margin-top: 15px;
+  color: var(--gold);
+  font-weight: 900;
+}
 
+.buy-card {
+  margin-top: 10px;
+  width: 100%;
+}
+
+.shop-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+/* NOTIFICATION */
+
+#notification {
+  position: absolute;
+  left: 50%;
+  top: 78%;
+  transform:
+    translate(-50%,20px);
+  opacity: 0;
+  pointer-events: none;
+  padding: 13px 20px;
+  border-radius: 12px;
+  background:
+    rgba(12,15,29,.96);
+  border: 1px solid
+    rgba(139,92,246,.4);
+  box-shadow:
+    0 15px 50px rgba(0,0,0,.4);
+  transition: .25s;
+  z-index: 50;
+}
+
+#notification.show {
+  opacity: 1;
+  transform:
+    translate(-50%,0);
+}
+
+/* RESPONSIVE */
+
+@media(max-width:850px) {
+  .cards-grid {
     grid-template-columns:
-        repeat(
-            auto-fit,
-            minmax(230px, 1fr)
-        );
+      repeat(2,1fr);
+  }
 
-    gap: 15px;
+  .players {
+    grid-template-columns:
+      repeat(2,1fr);
+  }
+
+  .party-panel {
+    display: none;
+  }
+
+  .boss-container {
+    width: 65vw;
+  }
 }
 
-.shop-item {
-    padding: 18px;
+@media(max-width:600px) {
+  .menu-card {
+    padding: 30px 20px;
+  }
 
-    background: #10152a;
+  .lobby-card {
+    padding: 22px;
+  }
 
-    border: 1px solid #303a60;
+  .players {
+    grid-template-columns:
+      repeat(2,1fr);
+  }
 
-    border-radius: 13px;
-}
+  .top-right {
+    right: 10px;
+    top: 10px;
+  }
 
-.shop-icon {
-    font-size: 42px;
-}
+  .top-left {
+    left: 10px;
+    top: 10px;
+  }
 
-.price {
-    color: var(--gold);
+  .player-panel {
+    width: 230px;
+  }
 
-    font-family: Orbitron;
-    font-weight: 700;
+  .controls-panel {
+    display: none;
+  }
 
-    margin: 12px 0;
-}
+  .hotkey {
+    width: 52px;
+    height: 52px;
+  }
 
-.shop-item button {
-    width: 100%;
-}
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
 
-/* =========================
-   TABS
-========================= */
-
-.tabs {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 18px;
-}
-
-.tab.active {
-    background: #29204d;
-    border-color: var(--purple);
-}
-
-/* =========================
-   KEY BINDS
-========================= */
-
-.bind-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    padding: 14px;
-
-    border-bottom: 1px solid #252c49;
-}
-
-/* =========================
-   MOBILE
-========================= */
-
-@media(max-width:700px) {
-
-    .menu-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .map-grid {
-        grid-template-columns: repeat(2, minmax(120px, 1fr));
-        padding: 16px;
-        gap: 12px;
-    }
-
-    .floor-node {
-        min-height: 102px;
-    }
-
-    .hud-left {
-        width: 60vw;
-    }
-
-    .player-hud {
-        width: 210px;
-    }
-
-    .controls {
-        display: none;
-    }
-
-    .panel,
-    .menu {
-        padding: 20px;
-    }
+  .boss-container {
+    width: 80vw;
+    top: 110px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<canvas id="gameCanvas"></canvas>
+<div id="app">
 
-<div id="damageFlash"></div>
+<div class="stars"></div>
 
-<!-- =========================
-     HUD
-========================= -->
+<!-- MENU -->
 
-<div id="hud" class="hidden">
+<section
+  id="menuScreen"
+  class="screen"
+>
+  <div class="menu-card">
 
-    <div class="hud-left">
+    <div class="logo">
+      REALM<span>FALL</span>
+    </div>
 
-        <div id="encounterName"
-             class="hud-title">
-            ENCOUNTER
-        </div>
+    <div class="subtitle">
+      Online Co-op Roguelike RPG
+    </div>
 
-        <div class="bar">
-            <div id="bossHP"
-                 class="fill">
-            </div>
-        </div>
+    <input
+      id="nameInput"
+      class="name-input"
+      maxlength="16"
+      placeholder="Enter your hero name"
+      aria-label="Hero name"
+    />
 
-        <div id="phaseText"
-             class="hud-small">
-            FLOOR 1
-        </div>
+    <div class="menu-buttons">
+
+      <button
+        id="createBtn"
+        class="btn btn-primary"
+      >
+        CREATE LOBBY
+      </button>
+
+      <button
+        id="joinBtn"
+        class="btn btn-secondary"
+      >
+        JOIN FRIEND
+      </button>
 
     </div>
 
-    <div class="hud-right">
+    <div
+      id="joinArea"
+      class="join-area"
+    >
+      <div class="join-row">
 
-        <div class="coin">
-            ◆ <span id="coinAmount">0</span>
+        <input
+          id="codeInput"
+          class="lobby-input"
+          maxlength="6"
+          placeholder="LOBBY CODE"
+          aria-label="Lobby code"
+        />
+
+        <button
+          id="confirmJoinBtn"
+          class="btn btn-primary"
+        >
+          JOIN
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- LOBBY -->
+
+<section
+  id="lobbyScreen"
+  class="screen hidden"
+>
+
+  <div class="lobby-card">
+
+    <div class="lobby-header">
+
+      <div>
+        <div class="lobby-title">
+          Party Lobby
         </div>
 
-        <div id="floorText"
-             class="hud-small">
-            FLOOR 1 / 10
+        <div
+          id="hostText"
+          class="subtitle"
+          style="text-align:left"
+        >
+          Waiting for players...
         </div>
+      </div>
 
     </div>
 
-    <div class="player-hud">
+    <div class="code-box">
 
-        HP
+      <div class="code-label">
+        Share this code with your friends
+      </div>
 
-        <div class="bar">
-            <div id="playerHP"
-                 class="fill">
-            </div>
-        </div>
-
-        MANA
-
-        <div class="bar">
-            <div id="mana"
-                 class="fill">
-            </div>
-        </div>
+      <div
+        id="roomCode"
+        class="room-code"
+      >
+        ------
+      </div>
 
     </div>
 
-    <div class="controls">
+    <div
+      id="players"
+      class="players"
+    ></div>
 
-        <b>WASD</b> Move ·
-        <b>LMB</b> Attack<br>
+    <div class="lobby-actions">
 
-        <b id="dashKeyDisplay">
-            SHIFT
-        </b>
-        Dash ·
+      <button
+        id="startBtn"
+        class="btn btn-primary"
+      >
+        START ASCENSION
+      </button>
 
-        <b id="abilityKeyDisplay">
+      <button
+        id="leaveBtn"
+        class="btn btn-danger"
+      >
+        LEAVE
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
+
+<!-- GAME -->
+
+<section
+  id="gameScreen"
+  class="hidden"
+>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div class="hud">
+
+    <!-- PLAYER -->
+
+    <div class="top-left">
+
+      <div class="panel player-panel">
+
+        <div
+          id="playerName"
+          class="player-name"
+        >
+          Hero
+        </div>
+
+        <div
+          id="playerLevel"
+          class="level"
+        >
+          LEVEL 1
+        </div>
+
+        <div class="bar">
+          <div
+            id="hpBar"
+            class="fill hp-fill"
+          ></div>
+        </div>
+
+        <div class="bar-label">
+          <span>VITALITY</span>
+          <span id="hpText">140 / 140</span>
+        </div>
+
+        <div class="bar">
+          <div
+            id="xpBar"
+            class="fill xp-fill"
+          ></div>
+        </div>
+
+        <div class="bar-label">
+          <span>EXPERIENCE</span>
+          <span id="xpText">0 / 100</span>
+        </div>
+
+        <div class="bar">
+          <div
+            id="energyBar"
+            class="fill energy-fill"
+          ></div>
+        </div>
+
+        <div class="bar-label">
+          <span>ENERGY</span>
+          <span id="energyText">100 / 100</span>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- FLOOR -->
+
+    <div class="top-right">
+
+      <div class="panel floor-panel">
+
+        <div
+          id="floorNumber"
+          class="floor-number"
+        >
+          FLOOR 1
+        </div>
+
+        <div
+          id="floorType"
+          class="floor-type"
+        >
+          COMBAT
+        </div>
+
+      </div>
+
+      <div
+        id="partyPanel"
+        class="panel party-panel"
+        style="margin-top:10px"
+      >
+
+        <div class="party-title">
+          PARTY
+        </div>
+
+        <div id="partyList"></div>
+
+      </div>
+
+      <div
+        id="goldPanel"
+        class="panel gold-panel"
+        style="margin-top:10px"
+      >
+        ◈ <span id="goldText">100</span>
+      </div>
+
+    </div>
+
+    <!-- BOSS -->
+
+    <div
+      id="bossContainer"
+      class="boss-container"
+    >
+
+      <div
+        id="bossName"
+        class="boss-name"
+      >
+        BOSS
+      </div>
+
+      <div
+        id="bossSubtitle"
+        class="boss-subtitle"
+      >
+        THE GUARDIAN
+      </div>
+
+      <div class="boss-bar">
+
+        <div
+          id="bossHealth"
+          class="boss-health"
+        ></div>
+
+      </div>
+
+      <div
+        id="bossPhase"
+        class="phase"
+      >
+        PHASE I
+      </div>
+
+    </div>
+
+    <!-- CONTROLS -->
+
+    <div class="bottom-left">
+
+      <div class="panel controls-panel">
+
+        <span class="key">W</span>
+        <span class="key">A</span>
+        <span class="key">S</span>
+        <span class="key">D</span>
+        Move
+        &nbsp; |
+
+        <span class="key">SPACE</span>
+        Dash
+        &nbsp; |
+
+        <span class="key">Q</span>
+        Ability
+        &nbsp; |
+
+        Mouse
+        Attack
+
+      </div>
+
+    </div>
+
+    <!-- HOTBAR -->
+
+    <div class="bottom-right">
+
+      <div class="hotbar">
+
+        <div class="hotkey">
+
+          <div class="hotkey-main">
+            SPACE
+          </div>
+
+          <div class="hotkey-name">
+            DASH
+          </div>
+
+        </div>
+
+        <div class="hotkey">
+
+          <div class="hotkey-main">
             Q
-        </b>
-        Ability ·
+          </div>
 
-        <b>ESC</b> Pause
+          <div class="hotkey-name">
+            ARCANE
+          </div>
+
+        </div>
+
+        <div class="hotkey">
+
+          <div class="hotkey-main">
+            ⚔
+          </div>
+
+          <div class="hotkey-name">
+            ATTACK
+          </div>
+
+        </div>
+
+      </div>
 
     </div>
 
-    <div id="centerMessage"></div>
+  </div>
 
-</div>
+</section>
 
+<!-- SHOP -->
 
-<!-- =========================
-     MAIN MENU
-========================= -->
+<div id="shopOverlay">
 
-<div id="mainMenu" class="screen">
+  <div class="shop">
 
-    <div class="menu">
+    <div class="shop-header">
 
-        <div class="logo">
-            VOIDFALL
+      <div>
+
+        <div class="shop-title">
+          THE ASCENSION SHOP
         </div>
 
         <div class="subtitle">
-            ASCENSION
+          Upgrade your build before climbing higher
         </div>
 
-        <button id="startButton"
-                class="primary">
-            BEGIN RUN
-        </button>
+      </div>
 
-        <div class="menu-grid">
-
-            <button id="inventoryButton" class="hidden">INVENTORY</button>
-
-            <button id="keybindButton">
-                KEY BINDS
-            </button>
-
-            <button id="settingsButton">
-                SETTINGS
-            </button>
-
-        </div>
-
-        <div class="tip">
-            Climb the tower. Build your deck.
-            Defeat the bosses. Press E during a run to open your arsenal.
-        </div>
+      <div class="shop-gold">
+        ◈ <span id="shopGold">0</span>
+      </div>
 
     </div>
 
-</div>
+    <div
+      id="cardsGrid"
+      class="cards-grid"
+    ></div>
 
+    <div class="shop-footer">
 
-<!-- =========================
-     MAP
-========================= -->
-
-<div id="mapScreen"
-     class="screen hidden">
-
-    <div class="panel">
-
-        <h2>
-            ASCENSION MAP
-        </h2>
-
-        <div id="mapDescription"
-             class="tip">
-        </div>
-
-        <div id="map"
-             class="map-grid">
-        </div>
-
-        <div class="map-legend">
-            <span><i class="legend-dot current"></i> Current</span>
-            <span><i class="legend-dot completed"></i> Completed</span>
-            <span><i class="legend-dot"></i> Upcoming</span>
-        </div>
-
-        <button id="enterFloorButton"
-                class="primary">
-            ENTER FLOOR
-        </button>
+      <button
+        id="nextFloorBtn"
+        class="btn btn-primary"
+      >
+        ASCEND TO NEXT FLOOR
+      </button>
 
     </div>
 
-</div>
-
-
-<!-- =========================
-     INVENTORY
-========================= -->
-
-<div id="inventoryScreen"
-     class="screen hidden">
-
-    <div class="panel">
-
-        <button id="inventoryClose"
-                class="close">
-            CLOSE
-        </button>
-
-        <h2>
-            ARSENAL
-        </h2>
-
-        <div class="tabs">
-
-            <button class="tab active"
-                    data-tab="cards">
-                CARDS
-            </button>
-
-            <button class="tab"
-                    data-tab="abilities">
-                ABILITIES
-            </button>
-
-            <button class="tab"
-                    data-tab="weapons">
-                WEAPONS
-            </button>
-
-            <button class="tab"
-                    data-tab="stats">
-                STATS
-            </button>
-
-        </div>
-
-        <div id="inventoryContent"></div>
-
-    </div>
+  </div>
 
 </div>
 
-
-<!-- =========================
-     SHOP
-========================= -->
-
-<div id="shopScreen"
-     class="screen hidden">
-
-    <div class="panel">
-
-        <h2>
-            VOID MERCHANT
-        </h2>
-
-        <div class="tip">
-            Spend your shards before continuing.
-        </div>
-
-        <br>
-
-        <div id="shopItems"
-             class="shop-grid">
-        </div>
-
-        <br>
-
-        <button id="leaveShopButton"
-                class="primary">
-            CONTINUE ASCENSION
-        </button>
-
-    </div>
+<div id="notification"></div>
 
 </div>
-
-
-<!-- =========================
-     KEY BINDS
-========================= -->
-
-<div id="keybindScreen"
-     class="screen hidden">
-
-    <div class="panel">
-
-        <button id="keybindClose"
-                class="close">
-            CLOSE
-        </button>
-
-        <h2>
-            KEY BINDS
-        </h2>
-
-        <div id="bindList"></div>
-
-    </div>
-
-</div>
-
-
-<!-- =========================
-     SETTINGS
-========================= -->
-
-<div id="settingsScreen"
-     class="screen hidden">
-
-    <div class="panel">
-
-        <button id="settingsClose"
-                class="close">
-            CLOSE
-        </button>
-
-        <h2>
-            SETTINGS
-        </h2>
-
-        <div class="stat-line">
-
-            <span>
-                Screen Shake
-            </span>
-
-            <button id="shakeButton">
-                ON
-            </button>
-
-        </div>
-
-        <div class="stat-line">
-
-            <span>
-                Particles
-            </span>
-
-            <button id="particleButton">
-                HIGH
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- =========================
-     PAUSE
-========================= -->
-
-<div id="pauseScreen"
-     class="screen hidden">
-
-    <div class="menu">
-
-        <div class="logo"
-             style="font-size:45px">
-            PAUSED
-        </div>
-
-        <button id="resumeButton"
-                class="primary">
-            RESUME
-        </button>
-
-        <br><br>
-
-        <button id="abandonButton">
-            ABANDON RUN
-        </button>
-
-    </div>
-
-</div>
-
-
-<!-- =========================
-     RESULT
-========================= -->
-
-<div id="resultScreen"
-     class="screen hidden">
-
-    <div class="menu">
-
-        <div id="resultTitle"
-             class="logo"
-             style="font-size:45px">
-            VICTORY
-        </div>
-
-        <div id="resultText"
-             class="tip">
-        </div>
-
-        <br>
-
-        <button id="newRunButton"
-                class="primary">
-            NEW RUN
-        </button>
-
-        <br><br>
-
-        <button id="resultMenuButton">
-            MAIN MENU
-        </button>
-
-    </div>
-
-</div>
-
 
 <script>
+const socket = io();
 
-/* ============================================================
-   VOIDFALL — COMPLETE GAME
-============================================================ */
+const menuScreen =
+  document.getElementById(
+    "menuScreen"
+  );
 
-"use strict";
+const lobbyScreen =
+  document.getElementById(
+    "lobbyScreen"
+  );
 
+const gameScreen =
+  document.getElementById(
+    "gameScreen"
+  );
 
-/* ============================================================
-   CANVAS
-============================================================ */
+const shopOverlay =
+  document.getElementById(
+    "shopOverlay"
+  );
+
+const nameInput =
+  document.getElementById(
+    "nameInput"
+  );
+
+const codeInput =
+  document.getElementById(
+    "codeInput"
+  );
+
+const joinArea =
+  document.getElementById(
+    "joinArea"
+  );
+
+const roomCode =
+  document.getElementById(
+    "roomCode"
+  );
+
+const players =
+  document.getElementById(
+    "players"
+  );
 
 const canvas =
-    document.getElementById("gameCanvas");
+  document.getElementById(
+    "gameCanvas"
+  );
 
 const ctx =
-    canvas.getContext("2d");
+  canvas.getContext("2d");
 
-let W = window.innerWidth;
-let H = window.innerHeight;
+let roomState = null;
+let myId = null;
+let currentRoom = null;
 
-// Keep the canvas at a sensible size on high-resolution/mobile devices.
-// The game still uses the full CSS viewport, but avoids an unnecessarily
-// huge drawing buffer which can make mobile browsers appear frozen.
-let canvasScale = 1;
+const keys = {};
 
-// The background is static, so render it once instead of rebuilding all
-// gradients, circles, rays and stars every animation frame.
-const backgroundCanvas = document.createElement("canvas");
-const backgroundCtx = backgroundCanvas.getContext("2d");
+let mouse = {
+  x: 0,
+  y: 0,
+  down: false
+};
 
-function buildBackground() {
+let lastFrame = performance.now();
 
-    backgroundCanvas.width = W;
-    backgroundCanvas.height = H;
+function showScreen(screen) {
+  menuScreen.classList.add(
+    "hidden"
+  );
 
-    const bctx = backgroundCtx;
+  lobbyScreen.classList.add(
+    "hidden"
+  );
 
-    bctx.clearRect(0, 0, W, H);
+  gameScreen.classList.add(
+    "hidden"
+  );
 
-    bctx.fillStyle = "#05060d";
-    bctx.fillRect(0, 0, W, H);
+  screen.classList.remove(
+    "hidden"
+  );
+}
 
-    const gradient = bctx.createRadialGradient(
-        W/2, H/2, 20,
-        W/2, H/2, Math.max(W,H)*.8
+function notify(message) {
+  const element =
+    document.getElementById(
+      "notification"
     );
 
-    gradient.addColorStop(0, "#171b36");
-    gradient.addColorStop(.55, "#0a0d1d");
-    gradient.addColorStop(1, "#03040a");
+  element.textContent = message;
 
-    bctx.fillStyle = gradient;
-    bctx.fillRect(0, 0, W, H);
+  element.classList.add(
+    "show"
+  );
 
-    bctx.strokeStyle = "#202742";
-    bctx.lineWidth = 1;
+  clearTimeout(
+    notify.timer
+  );
 
-    const centerX = W/2;
-    const centerY = H/2+80;
-
-    for (let radius=100; radius<Math.max(W,H); radius+=90) {
-        bctx.beginPath();
-        bctx.arc(centerX, centerY, radius, 0, Math.PI*2);
-        bctx.stroke();
-    }
-
-    for (let angle=0; angle<Math.PI*2; angle+=Math.PI/10) {
-        bctx.beginPath();
-        bctx.moveTo(centerX, centerY);
-        bctx.lineTo(
-            centerX + Math.cos(angle)*Math.max(W,H),
-            centerY + Math.sin(angle)*Math.max(W,H)
-        );
-        bctx.stroke();
-    }
-
-    for (let i=0; i<55; i++) {
-        bctx.globalAlpha = .1 + ((i*17)%10)/40;
-        bctx.fillStyle = "#dce4ff";
-        bctx.fillRect((i*131)%W, (i*71)%H, 1.5, 1.5);
-    }
-
-    bctx.globalAlpha = 1;
+  notify.timer =
+    setTimeout(() => {
+      element.classList.remove(
+        "show"
+      );
+    }, 2400);
 }
+
+/* MENU */
+
+document
+  .getElementById("createBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      const name =
+        nameInput.value.trim() ||
+        "Hero";
+
+      socket.emit(
+        "createLobby",
+        { name }
+      );
+    }
+  );
+
+document
+  .getElementById("joinBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      joinArea.classList.toggle(
+        "active"
+      );
+
+      if (
+        joinArea.classList.contains(
+          "active"
+        )
+      ) {
+        codeInput.focus();
+      }
+    }
+  );
+
+document
+  .getElementById("confirmJoinBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      const code =
+        codeInput.value
+          .trim()
+          .toUpperCase();
+
+      const name =
+        nameInput.value.trim() ||
+        "Hero";
+
+      if (code.length < 4) {
+        notify(
+          "Enter a valid lobby code."
+        );
+
+        return;
+      }
+
+      socket.emit(
+        "joinLobby",
+        {
+          code,
+          name
+        }
+      );
+    }
+  );
+
+codeInput.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.key === "Enter"
+    ) {
+      document
+        .getElementById(
+          "confirmJoinBtn"
+        )
+        .click();
+    }
+
+  }
+);
+
+/* SOCKET */
+
+socket.on(
+  "lobbyCreated",
+  data => {
+
+    myId =
+      data.playerId;
+
+    currentRoom =
+      data.code;
+
+    roomCode.textContent =
+      data.code;
+
+    showScreen(
+      lobbyScreen
+    );
+
+  }
+);
+
+socket.on(
+  "lobbyJoined",
+  data => {
+
+    myId =
+      data.playerId;
+
+    currentRoom =
+      data.code;
+
+    roomCode.textContent =
+      data.code;
+
+    showScreen(
+      lobbyScreen
+    );
+
+  }
+);
+
+socket.on(
+  "gameStarted",
+  () => {
+
+    showScreen(
+      gameScreen
+    );
+
+  }
+);
+
+socket.on(
+  "errorMessage",
+  message => {
+
+    notify(message);
+
+  }
+);
+
+socket.on(
+  "state",
+  state => {
+
+    roomState =
+      state;
+
+    updateLobby(
+      state
+    );
+
+    updateHUD(
+      state
+    );
+
+    updateShop(
+      state
+    );
+
+  }
+);
+
+/* LOBBY */
+
+function updateLobby(state) {
+
+  if (
+    !lobbyScreen.classList.contains(
+      "hidden"
+    )
+  ) {
+
+    roomCode.textContent =
+      state.code;
+
+    players.innerHTML =
+      "";
+
+    for (
+      let i = 0;
+      i < 4;
+      i++
+    ) {
+
+      const player =
+        state.players[i];
+
+      const slot =
+        document.createElement(
+          "div"
+        );
+
+      slot.className =
+        "player-slot";
+
+      if (player) {
+
+        const avatar =
+          document.createElement(
+            "div"
+          );
+
+        avatar.className =
+          "player-avatar";
+
+        avatar.textContent =
+          player.name
+            .charAt(0)
+            .toUpperCase();
+
+        const name =
+          document.createElement(
+            "div"
+          );
+
+        name.textContent =
+          player.name;
+
+        slot.appendChild(
+          avatar
+        );
+
+        slot.appendChild(
+          name
+        );
+
+        if (
+          player.id ===
+          state.hostId
+        ) {
+
+          const host =
+            document.createElement(
+              "div"
+            );
+
+          host.style.color =
+            "#facc15";
+
+          host.style.fontSize =
+            "10px";
+
+          host.style.marginTop =
+            "5px";
+
+          host.textContent =
+            "HOST";
+
+          slot.appendChild(
+            host
+          );
+        }
+
+      } else {
+
+        slot.innerHTML =
+          '<div class="empty-slot">WAITING...</div>';
+
+      }
+
+      players.appendChild(
+        slot
+      );
+    }
+
+    const startBtn =
+      document.getElementById(
+        "startBtn"
+      );
+
+    startBtn.disabled =
+      state.hostId !== myId;
+
+    startBtn.style.opacity =
+      state.hostId === myId
+        ? "1"
+        : ".45";
+
+  }
+}
+
+document
+  .getElementById(
+    "startBtn"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      socket.emit(
+        "startGame"
+      );
+
+    }
+  );
+
+document
+  .getElementById(
+    "leaveBtn"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      location.reload();
+
+    }
+  );
+
+/* INPUT */
+
+window.addEventListener(
+  "keydown",
+  event => {
+
+    const key =
+      event.key.toLowerCase();
+
+    keys[key] = true;
+
+    if (
+      key === "q"
+    ) {
+      socket.emit(
+        "input",
+        {
+          ability: true
+        }
+      );
+    }
+
+    if (
+      event.code ===
+      "Space"
+    ) {
+      event.preventDefault();
+
+      socket.emit(
+        "input",
+        {
+          dash: true
+        }
+      );
+    }
+
+  }
+);
+
+window.addEventListener(
+  "keyup",
+  event => {
+
+    keys[
+      event.key.toLowerCase()
+    ] = false;
+
+  }
+);
+
+canvas.addEventListener(
+  "mousemove",
+  event => {
+
+    const rect =
+      canvas.getBoundingClientRect();
+
+    mouse.x =
+      event.clientX -
+      rect.left;
+
+    mouse.y =
+      event.clientY -
+      rect.top;
+
+  }
+);
+
+canvas.addEventListener(
+  "mousedown",
+  event => {
+
+    if (
+      event.button === 0
+    ) {
+
+      mouse.down = true;
+
+    }
+
+  }
+);
+
+window.addEventListener(
+  "mouseup",
+  event => {
+
+    if (
+      event.button === 0
+    ) {
+      mouse.down = false;
+    }
+
+  }
+);
+
+/* SEND INPUT */
+
+setInterval(
+  () => {
+
+    if (
+      !roomState ||
+      roomState.floorType ===
+      "shop"
+    ) {
+      return;
+    }
+
+    const me =
+      roomState.players.find(
+        player =>
+          player.id === myId
+      );
+
+    if (!me) return;
+
+    const dx =
+      mouse.x -
+      canvas.width / 2;
+
+    const dy =
+      mouse.y -
+      canvas.height / 2;
+
+    const length =
+      Math.hypot(dx, dy) || 1;
+
+    socket.emit(
+      "input",
+      {
+        up:
+          keys["w"] ||
+          keys["arrowup"],
+
+        down:
+          keys["s"] ||
+          keys["arrowdown"],
+
+        left:
+          keys["a"] ||
+          keys["arrowleft"],
+
+        right:
+          keys["d"] ||
+          keys["arrowright"],
+
+        attack:
+          mouse.down,
+
+        aimX:
+          dx / length,
+
+        aimY:
+          dy / length
+      }
+    );
+
+  },
+  50
+);
+
+/* HUD */
+
+function updateHUD(state) {
+
+  if (
+    gameScreen.classList.contains(
+      "hidden"
+    )
+  ) {
+    return;
+  }
+
+  const me =
+    state.players.find(
+      player =>
+        player.id === myId
+    );
+
+  if (!me) return;
+
+  document.getElementById(
+    "playerName"
+  ).textContent =
+    me.name;
+
+  document.getElementById(
+    "playerLevel"
+  ).textContent =
+    `LEVEL ${me.level}`;
+
+  const hpPercent =
+    me.maxHp > 0
+      ? me.hp / me.maxHp * 100
+      : 0;
+
+  const xpPercent =
+    me.xpNeed > 0
+      ? me.xp / me.xpNeed * 100
+      : 0;
+
+  const energyPercent =
+    me.maxEnergy > 0
+      ? me.energy /
+        me.maxEnergy *
+        100
+      : 0;
+
+  document.getElementById(
+    "hpBar"
+  ).style.width =
+    hpPercent + "%";
+
+  document.getElementById(
+    "xpBar"
+  ).style.width =
+    xpPercent + "%";
+
+  document.getElementById(
+    "energyBar"
+  ).style.width =
+    energyPercent + "%";
+
+  document.getElementById(
+    "hpText"
+  ).textContent =
+    `${Math.ceil(me.hp)} / ${me.maxHp}`;
+
+  document.getElementById(
+    "xpText"
+  ).textContent =
+    `${me.xp} / ${me.xpNeed}`;
+
+  document.getElementById(
+    "energyText"
+  ).textContent =
+    `${Math.ceil(me.energy)} / ${me.maxEnergy}`;
+
+  document.getElementById(
+    "goldText"
+  ).textContent =
+    me.gold;
+
+  document.getElementById(
+    "floorNumber"
+  ).textContent =
+    `FLOOR ${state.floor}`;
+
+  document.getElementById(
+    "floorType"
+  ).textContent =
+    state.floorType.toUpperCase();
+
+  updateParty(
+    state,
+    me
+  );
+
+  updateBoss(
+    state
+  );
+}
+
+function updateParty(
+  state,
+  me
+) {
+
+  const list =
+    document.getElementById(
+      "partyList"
+    );
+
+  list.innerHTML =
+    "";
+
+  for (
+    const player of state.players
+  ) {
+
+    const row =
+      document.createElement(
+        "div"
+      );
+
+    row.className =
+      "party-member";
+
+    const name =
+      document.createElement(
+        "span"
+      );
+
+    name.textContent =
+      player.name +
+      (
+        player.id === myId
+          ? " ★"
+          : ""
+      );
+
+    const hp =
+      document.createElement(
+        "span"
+      );
+
+    hp.className =
+      "party-hp";
+
+    hp.textContent =
+      `${Math.ceil(
+        player.hp
+      )}/${player.maxHp}`;
+
+    row.appendChild(
+      name
+    );
+
+    row.appendChild(
+      hp
+    );
+
+    list.appendChild(
+      row
+    );
+  }
+}
+
+function updateBoss(state) {
+
+  const container =
+    document.getElementById(
+      "bossContainer"
+    );
+
+  if (!state.boss) {
+
+    container.classList.remove(
+      "active"
+    );
+
+    return;
+  }
+
+  container.classList.add(
+    "active"
+  );
+
+  document.getElementById(
+    "bossName"
+  ).textContent =
+    state.boss.name;
+
+  document.getElementById(
+    "bossSubtitle"
+  ).textContent =
+    state.boss.subtitle;
+
+  const percent =
+    Math.max(
+      0,
+      state.boss.hp /
+      state.boss.maxHp *
+      100
+    );
+
+  document.getElementById(
+    "bossHealth"
+  ).style.width =
+    percent + "%";
+
+  document.getElementById(
+    "bossPhase"
+  ).textContent =
+    state.boss.phase === 2
+      ? "PHASE II — ENRAGED"
+      : "PHASE I";
+}
+
+/* SHOP */
+
+function updateShop(state) {
+
+  if (
+    state.floorType !==
+    "shop"
+  ) {
+
+    shopOverlay.classList.remove(
+      "active"
+    );
+
+    return;
+  }
+
+  const me =
+    state.players.find(
+      player =>
+        player.id === myId
+    );
+
+  if (!me) return;
+
+  shopOverlay.classList.add(
+    "active"
+  );
+
+  document.getElementById(
+    "shopGold"
+  ).textContent =
+    me.gold;
+
+  const grid =
+    document.getElementById(
+      "cardsGrid"
+    );
+
+  grid.innerHTML =
+    "";
+
+  state.shopOffers.forEach(
+    (card, index) => {
+
+      const element =
+        document.createElement(
+          "div"
+        );
+
+      element.className =
+        "card";
+
+      if (!card) {
+
+        element.style.opacity =
+          ".25";
+
+        element.innerHTML =
+          "<div>BOUGHT</div>";
+
+        grid.appendChild(
+          element
+        );
+
+        return;
+      }
+
+      element.innerHTML = `
+        <div class="card-rarity rarity-${card.rarity}">
+          ${card.rarity}
+        </div>
+
+        <div class="card-name">
+          ${escapeHtml(card.name)}
+        </div>
+
+        <div class="card-description">
+          ${escapeHtml(card.description)}
+        </div>
+
+        <div class="card-price">
+          ◈ ${card.price}
+        </div>
+      `;
+
+      const button =
+        document.createElement(
+          "button"
+        );
+
+      button.className =
+        "btn btn-primary buy-card";
+
+      button.textContent =
+        "BUY CARD";
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          socket.emit(
+            "buyCard",
+            {
+              index
+            }
+          );
+
+        }
+      );
+
+      element.appendChild(
+        button
+      );
+
+      grid.appendChild(
+        element
+      );
+
+    }
+  );
+}
+
+document
+  .getElementById(
+    "nextFloorBtn"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      socket.emit(
+        "nextFloor"
+      );
+
+    }
+  );
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+
+}
+
+/* CANVAS */
 
 function resizeCanvas() {
 
-    W = Math.max(320, window.innerWidth);
-    H = Math.max(240, window.innerHeight);
+  canvas.width =
+    window.innerWidth;
 
-    // Avoid an enormous backing buffer on phones/tablets while keeping
-    // the game's coordinate system tied to the visible viewport.
-    canvasScale = Math.min(1.5, window.devicePixelRatio || 1);
+  canvas.height =
+    window.innerHeight;
 
-    canvas.width = Math.floor(W * canvasScale);
-    canvas.height = Math.floor(H * canvasScale);
-    canvas.style.width = W + "px";
-    canvas.style.height = H + "px";
-
-    ctx.setTransform(canvasScale, 0, 0, canvasScale, 0, 0);
-
-    buildBackground();
 }
 
 window.addEventListener(
-    "resize",
-    resizeCanvas
+  "resize",
+  resizeCanvas
 );
 
 resizeCanvas();
 
-
-/* ============================================================
-   HELPERS
-============================================================ */
-
-const $ = id =>
-    document.getElementById(id);
-
-const random = (min,max) =>
-    Math.random() * (max-min) + min;
-
-const randomInt = (min,max) =>
-    Math.floor(random(min,max+1));
-
-const choose = array =>
-    array[
-        Math.floor(
-            Math.random()*array.length
-        )
-    ];
-
-
-/* ============================================================
-   INPUT
-============================================================ */
-
-const keys = {};
-
-const mouse = {
-    x: W/2,
-    y: H/2,
-    down: false
-};
-
-window.addEventListener(
-    "keydown",
-    e => {
-
-        const key =
-            e.key.toLowerCase();
-
-        keys[key] = true;
-
-        if(bindingWaiting) {
-
-            binds[bindingWaiting] =
-                key;
-
-            bindingWaiting = null;
-
-            renderKeybinds();
-
-            e.preventDefault();
-
-            return;
-        }
-
-        if(
-            key === "escape" &&
-            game.active
-        ) {
-
-            togglePause();
-
-            return;
-        }
-
-        if(
-            game.active &&
-            !game.paused &&
-            key === binds.dash
-        ) {
-
-            dash();
-
-        }
-
-        if(key==="e" && game.active && !game.paused){
-            renderInventory("weapons");
-            showScreen("inventoryScreen");
-            game.paused=true;
-            e.preventDefault();
-            return;
-        }
-
-        if(
-            game.active &&
-            !game.paused &&
-            key === binds.ability
-        ) {
-
-            useAbility();
-
-        }
-
-    }
-);
-
-window.addEventListener(
-    "keyup",
-    e => {
-
-        keys[
-            e.key.toLowerCase()
-        ] = false;
-
-    }
-);
-
-canvas.addEventListener(
-    "mousemove",
-    e => {
-
-        mouse.x = e.clientX;
-        mouse.y = e.clientY;
-
-    }
-);
-
-canvas.addEventListener(
-    "mousedown",
-    () => {
-
-        mouse.down = true;
-
-    }
-);
-
-window.addEventListener(
-    "mouseup",
-    () => {
-
-        mouse.down = false;
-
-    }
-);
-
-
-/* ============================================================
-   KEY BINDS
-============================================================ */
-
-const binds = {
-
-    up: "w",
-    down: "s",
-    left: "a",
-    right: "d",
-
-    dash: "shift",
-    ability: "q"
-
-};
-
-let bindingWaiting = null;
-
-
-/* ============================================================
-   GAME STATE
-============================================================ */
-
-const game = {
-
-    active: false,
-    paused: false,
-
-    floor: 0,
-    maxFloors: 60,
-
-    coins: 150,
-    kills: 0,
-
-    currentFloorType: null,
-
-    floorTypes: [],
-
-    enemies: [],
-    boss: null,
-
-    projectiles: [],
-    particles: [],
-    slashes: [],
-    texts: [],
-
-    cards: [],
-    abilities: [],
-
-    equippedAbility: "arc",
-    weapons: [],
-    equippedWeapon: "voidblade",
-
-    shake: 0
-
-};
-
-
-/* ============================================================
-   PLAYER
-============================================================ */
-
-const player = {
-
-    x: W/2,
-    y: H-130,
-
-    radius: 17,
-
-    hp: 100,
-    maxHp: 100,
-
-    mana: 100,
-    maxMana: 100,
-
-    speed: 4.1,
-
-    damageMultiplier: 1,
-    weaponDamage: 55,
-    weaponRange: 125,
-    weaponCooldown: .22,
-    weaponColor: "#758cff",
-
-    attackCooldown: 0,
-    dashCooldown: 0,
-    abilityCooldown: 0,
-
-    invincible: 0
-
-};
-
-
-function resetPlayer() {
-
-    player.x = W/2;
-    player.y = H-130;
-
-    player.hp =
-        player.maxHp;
-
-    player.mana =
-        player.maxMana;
-
-    player.attackCooldown = 0;
-    player.dashCooldown = 0;
-    player.abilityCooldown = 0;
-
-    player.invincible = 0;
-
-}
-
-
-/* ============================================================
-   ENEMIES
-============================================================ */
-
-const enemyTypes = [
-
-    {
-        name: "VOIDLING",
-        hp: 90,
-        speed: 1.5,
-        radius: 17,
-        damage: 9,
-        reward: 12,
-        color: "#8060ff"
-    },
-
-    {
-        name: "RAVAGER",
-        hp: 150,
-        speed: 1.1,
-        radius: 23,
-        damage: 14,
-        reward: 20,
-        color: "#ff4268"
-    },
-
-    {
-        name: "WISP",
-        hp: 65,
-        speed: 2.0,
-        radius: 13,
-        damage: 7,
-        reward: 10,
-        color: "#55b7ff"
-    },
-
-    {
-        name: "BRUTE",
-        hp: 260,
-        speed: .65,
-        radius: 30,
-        damage: 20,
-        reward: 30,
-        color: "#ff8b42"
-    }
-
-];
-
-
-/* ============================================================
-   BOSSES
-============================================================ */
-
-const bosses = [
-
-    {
-        name: "THE WARDEN",
-        title: "IRON JUDGE",
-        hp: 900,
-        color: "#6d91ff",
-        speed: 1
-    },
-
-    {
-        name: "NYX",
-        title: "VOID WITCH",
-        hp: 800,
-        color: "#b667ff",
-        speed: 1.15
-    },
-
-    {
-        name: "RAVAGER PRIME",
-        title: "BLOOD ENGINE",
-        hp: 1100,
-        color: "#ff4268",
-        speed: 1.2
-    },
-
-    {
-        name: "SOLARIS",
-        title: "FALLEN SUN",
-        hp: 1000,
-        color: "#ffc857",
-        speed: .9
-    },
-
-    {
-        name: "THE ABYSS", title: "WORLD EATER", hp: 1400,
-        color: "#48d6c7", speed: .8
-    }
-];
-
-const bossAbilityPool=["orb","spread","rain","slam","dash","teleport","vortex","mines","laser","meteor","summon","drain","shockwave","spiral","cage","clone","heal","walls"];
-const extraBossNames=[
-"DREADMARCH","VEXOR","NIGHTFALL","GRAVEMAW","CRIMSON TITAN","NULL KING","STAR REAPER","ASHEN QUEEN","RIFT LORD","OBSIDIAN HUNTER",
-"THUNDER WRAITH","BONE EMPEROR","VOID SERAPH","IRON COLOSSUS","EMBER TYRANT","FROST MONARCH","DARK COMET","PLAGUE ENGINE","PHANTOM CORE","WARLORD ZERO",
-"NEBULA FIEND","CHAOS KNIGHT","SINGULARITY","RED GIANT","BLACK MIRROR","DUSKBRINGER","STORM EMPEROR","GRAVITY SAINT","THE CRAWLER","HELLSTAR",
-"CRYO BEAST","QUANTUM LORD","BLADE SOVEREIGN","MOLTEN HEART","VOID HYDRA","SKY BREAKER","DEATH ORBIT","RIFT BEHEMOTH","ECLIPSE","THE CONSUMER",
-"TIME REAPER","SHARD EMPEROR","DREAM EATER","NOVA KING","THE UNMAKER","COSMIC WARDEN","FINAL PHANTOM","ABYSSAL PRIME","THE ARCHON","ETERNAL NIGHT"
-];
-extraBossNames.forEach((name,i)=>{
- const abilities=[bossAbilityPool[(i*3)%18],bossAbilityPool[(i*3+5)%18],bossAbilityPool[(i*3+10)%18]];
- bosses.push({name,title:["RIFT LORD","VOID CHAMPION","DEATH ENGINE","STAR TYRANT","ABYSSAL HUNTER"][i%5],
- hp:950+i*22,color:["#8d6bff","#ff4268","#55b7ff","#ffc857","#48d6c7","#b667ff"][i%6],
- speed:.72+(i%5)*.12,abilities});
-});
-bosses.forEach((b,i)=>{if(!b.abilities)b.abilities=[bossAbilityPool[i%18],bossAbilityPool[(i+5)%18],bossAbilityPool[(i+10)%18]];});
-
-
-/* ============================================================
-   WEAPONS
-============================================================ */
-const weaponPool=[
-{id:"voidblade",name:"VOID BLADE",icon:"⚔",rarity:"rare",description:"Balanced energy blade.",damage:55,range:125,cooldown:.22,color:"#758cff"},
-{id:"starhammer",name:"STAR HAMMER",icon:"✦",rarity:"epic",description:"Heavy hits with huge damage.",damage:85,range:115,cooldown:.38,color:"#ffc857"},
-{id:"frostspear",name:"FROST SPEAR",icon:"❄",rarity:"rare",description:"Long-range icy weapon.",damage:62,range:175,cooldown:.25,color:"#55b7ff"},
-{id:"bloodfang",name:"BLOOD FANG",icon:"☾",rarity:"legendary",description:"Fast attacks.",damage:48,range:130,cooldown:.13,color:"#ff4268"},
-{id:"sunedge",name:"SUN EDGE",icon:"☀",rarity:"epic",description:"Burning high-damage strikes.",damage:72,range:145,cooldown:.20,color:"#ff9f43"},
-{id:"voidstaff",name:"VOID STAFF",icon:"⌁",rarity:"legendary",description:"Extreme reach.",damage:68,range:205,cooldown:.29,color:"#b667ff"},
-{id:"stormclaw",name:"STORM CLAW",icon:"⚡",rarity:"epic",description:"Lightning-fast strikes.",damage:42,range:140,cooldown:.10,color:"#48d6c7"},
-{id:"doomcannon",name:"DOOM CANNON",icon:"◉",rarity:"legendary",description:"Massive close-range hits.",damage:125,range:105,cooldown:.52,color:"#ff6b81"}
-];
-function equipWeapon(w){
- if(!w)return;
- game.equippedWeapon=w.id;
- player.weaponDamage=w.damage; player.weaponRange=w.range;
- player.weaponCooldown=w.cooldown; player.weaponColor=w.color;
-}
-
-/* ============================================================
-   ABILITIES
-============================================================ */
-
-const abilityPool = [
-
-    {
-        id: "arc",
-        name: "ARC STRIKE",
-        icon: "⚡",
-        rarity: "rare",
-        description:
-            "Fire three powerful energy bolts.",
-        cost: 25
-    },
-
-    {
-        id: "nova",
-        name: "VOID NOVA",
-        icon: "✦",
-        rarity: "epic",
-        description:
-            "Explode around yourself.",
-        cost: 35
-    },
-
-    {
-        id: "blink",
-        name: "PHASE BLINK",
-        icon: "◈",
-        rarity: "legendary",
-        description:
-            "Teleport forward.",
-        cost: 30
-    },
-
-    {
-        id: "storm",
-        name: "STAR STORM",
-        icon: "☄",
-        rarity: "epic",
-        description:
-            "Call seven energy strikes.",
-        cost: 45
-    },
-
-    {
-        id: "frost",
-        name: "FROST RING",
-        icon: "❄",
-        rarity: "rare",
-        description:
-            "Damage enemies around you.",
-        cost: 30
-    }
-
-];
-
-
-/* ============================================================
-   CARDS
-============================================================ */
-
-const cardPool = [
-
-    {
-        name: "BERSERKER",
-        icon: "⚔",
-        rarity: "rare",
-        description:
-            "+18% attack damage.",
-        stat: "Damage",
-        value: 18
-    },
-
-    {
-        name: "PHANTOM",
-        icon: "👻",
-        rarity: "epic",
-        description:
-            "+15% movement speed.",
-        stat: "Speed",
-        value: 15
-    },
-
-    {
-        name: "BLOOD CORE",
-        icon: "♥",
-        rarity: "legendary",
-        description:
-            "+30 maximum HP.",
-        stat: "Max HP",
-        value: 30
-    },
-
-    {
-        name: "ARCANE MIND",
-        icon: "✦",
-        rarity: "rare",
-        description:
-            "+25 maximum mana.",
-        stat: "Max Mana",
-        value: 25
-    },
-
-    {
-        name: "GOLDEN TOUCH",
-        icon: "◆",
-        rarity: "epic",
-        description:
-            "+20% coins from enemies.",
-        stat: "Coin Gain",
-        value: 20
-    },
-
-    {
-        name: "VAMPIRIC EDGE",
-        icon: "☾",
-        rarity: "legendary",
-        description:
-            "Heal 2 HP after killing an enemy.",
-        stat: "Lifesteal",
-        value: 2
-    },
-
-    {
-        name: "DASH MASTER",
-        icon: "➤",
-        rarity: "rare",
-        description:
-            "Dash cooldown reduced by 25%.",
-        stat: "Dash",
-        value: 25
-    }
-
-];
-
-
-/* ============================================================
-   SCREEN MANAGEMENT
-============================================================ */
-
-const screens = [
-
-    "mainMenu",
-    "mapScreen",
-    "inventoryScreen",
-    "shopScreen",
-    "keybindScreen",
-    "settingsScreen",
-    "pauseScreen",
-    "resultScreen"
-
-];
-
-
-function hideAllScreens() {
-
-    screens.forEach(id => {
-
-        $(id).classList.add("hidden");
-
-    });
-
-}
-
-
-function showScreen(id) {
-
-    hideAllScreens();
-
-    if(id) {
-
-        $(id).classList.remove(
-            "hidden"
-        );
-
-    }
-
-}
-
-
-/* ============================================================
-   MAIN MENU
-============================================================ */
-
-$("startButton").addEventListener(
-    "click",
-    startRun
-);
-
-$("inventoryButton").addEventListener(
-    "click",
-    () => {
-
-        renderInventory("cards");
-
-        showScreen(
-            "inventoryScreen"
-        );
-
-    }
-);
-
-$("keybindButton").addEventListener(
-    "click",
-    () => {
-
-        renderKeybinds();
-
-        showScreen(
-            "keybindScreen"
-        );
-
-    }
-);
-
-$("settingsButton").addEventListener(
-    "click",
-    () => {
-
-        showScreen(
-            "settingsScreen"
-        );
-
-    }
-);
-
-
-/* ============================================================
-   START RUN
-============================================================ */
-
-function startRun() {
-
-    game.active = true;
-    game.paused = false;
-
-    game.floor = 0;
-
-    game.coins = 150;
-
-    game.kills = 0;
-
-    game.cards = [];
-
-    game.abilities = [
-        abilityPool[0]
-    ];
-
-    game.equippedAbility = "arc";
-    game.weapons = [weaponPool[0]];
-    equipWeapon(weaponPool[0]);
-
-    game.enemies = [];
-    game.boss = null;
-
-    game.projectiles = [];
-    game.particles = [];
-    game.slashes = [];
-    game.texts = [];
-
-    player.maxHp = 100;
-    player.maxMana = 100;
-    player.speed = 4.1;
-    player.damageMultiplier = 1;
-
-    resetPlayer();
-
-    generateFloorPath();
-
-    $("hud").classList.remove(
-        "hidden"
-    );
-
-    openMap();
-
-}
-
-
-/* ============================================================
-   RNG FLOOR GENERATION
-============================================================ */
-
-function generateFloorPath() {
-
-    game.floorTypes = [];
-
-    for(
-        let i = 0;
-        i < game.maxFloors;
-        i++
-    ) {
-
-        if(
-            i === game.maxFloors - 1
-        ) {
-
-            game.floorTypes.push(
-                "boss"
-            );
-
-            continue;
-        }
-
-        const roll =
-            Math.random();
-
-        if(roll < .25) {
-
-            game.floorTypes.push(
-                "shop"
-            );
-
-        } else if(roll < .50) {
-
-            game.floorTypes.push(
-                "boss"
-            );
-
-        } else {
-
-            game.floorTypes.push(
-                "enemy"
-            );
-
-        }
-
-    }
-
-}
-
-
-/* ============================================================
-   MAP
-============================================================ */
-
-function openMap() {
-
-    game.active = false;
-
-    showScreen(
-        "mapScreen"
-    );
-
-    renderMap();
-
-}
-
-
-function renderMap() {
-
-    let html = "";
-
-    game.floorTypes.forEach(
-        (type,index) => {
-
-            let icon = "⚔️";
-
-            if(type === "boss")
-                icon = "👹";
-
-            if(type === "shop")
-                icon = "🛒";
-
-            let state = "";
-
-            if(index < game.floor) {
-
-                state =
-                    "completed";
-
-            }
-
-            if(index === game.floor) {
-
-                state =
-                    "current";
-
-            }
-
-            html += `
-
-                <div class="
-                    floor-node
-                    ${state}
-                ">
-
-                    <span>
-                        ${icon}
-                    </span>
-
-                    FLOOR ${index+1}
-
-                    <br>
-
-                    <small>
-                        ${type.toUpperCase()}
-                    </small>
-
-                </div>
-
-            `;
-
-        }
-    );
-
-    $("map").innerHTML =
-        html;
-
-    if(
-        game.floor >=
-        game.maxFloors
-    ) {
-
-        $("mapDescription")
-            .textContent =
-            "The tower has been conquered.";
-
-        $("enterFloorButton")
-            .textContent =
-            "ASCENSION COMPLETE";
-
-        return;
-
-    }
-
-    const next =
-        game.floorTypes[
-            game.floor
-        ];
-
-    let description =
-        "Choose your next challenge.";
-
-    if(next === "enemy")
-        description =
-            "Enemy wave — defeat everything.";
-
-    if(next === "boss")
-        description =
-            "Boss floor — survive the fight.";
-
-    if(next === "shop")
-        description =
-            "Merchant floor — buy upgrades.";
-
-    $("mapDescription")
-        .textContent =
-        description;
-
-    $("enterFloorButton")
-        .textContent =
-        `ENTER FLOOR ${game.floor+1}`;
-
-}
-
-
-/* ============================================================
-   ENTER FLOOR BUTTON
-============================================================ */
-
-$("enterFloorButton")
-    .addEventListener(
-        "click",
-        enterNextFloor
-    );
-
-
-function enterNextFloor() {
-
-    if(
-        game.floor >=
-        game.maxFloors
-    ) {
-
-        victory();
-
-        return;
-
-    }
-
-    const type =
-        game.floorTypes[
-            game.floor
-        ];
-
-    game.currentFloorType =
-        type;
-
-    // Hide the map overlay before the arena starts.
-    hideAllScreens();
-
-    game.floor++;
-
-    resetPlayer();
-
-    $("floorText")
-        .textContent =
-        `FLOOR ${game.floor} / ${game.maxFloors}`;
-
-    if(type === "enemy") {
-
-        startEnemyFloor();
-
-        return;
-
-    }
-
-    if(type === "boss") {
-
-        startBossFloor();
-
-        return;
-
-    }
-
-    if(type === "shop") {
-
-        openShop();
-
-        return;
-
-    }
-
-}
-
-
-/* ============================================================
-   ENEMY FLOOR
-============================================================ */
-
-function startEnemyFloor() {
-
-    game.active = true;
-
-    game.enemies = [];
-
-    game.boss = null;
-
-    game.projectiles = [];
-
-    const amount =
-        3 +
-        Math.floor(
-            game.floor * 1.25
-        );
-
-    for(
-        let i = 0;
-        i < amount;
-        i++
-    ) {
-
-        const template =
-            choose(enemyTypes);
-
-        const scale =
-            1 +
-            game.floor * .11;
-
-        game.enemies.push({
-
-            name: template.name,
-
-            hp:
-                template.hp *
-                scale,
-
-            maxHp:
-                template.hp *
-                scale,
-
-            speed:
-                template.speed,
-
-            radius:
-                template.radius,
-
-            damage:
-                template.damage,
-
-            reward:
-                template.reward,
-
-            color:
-                template.color,
-
-            x:
-                random(
-                    60,
-                    W-60
-                ),
-
-            y:
-                random(
-                    100,
-                    H*.55
-                ),
-
-            attackTimer:
-                random(.3,1.4)
-
-        });
-
-    }
-
-    $("encounterName")
-        .textContent =
-        "ENEMY WAVE";
-
-    $("bossHP")
-        .style.width =
-        "0%";
-
-    flashMessage(
-        `FLOOR ${game.floor}`,
-        "#8d6bff"
-    );
-
-}
-
-
-/* ============================================================
-   BOSS FLOOR
-============================================================ */
-
-function startBossFloor() {
-
-    game.active = true;
-
-    game.enemies = [];
-
-    game.projectiles = [];
-
-    const template =
-        choose(bosses);
-
-    const scale =
-        .95 +
-        Math.random()*.35 +
-        game.floor*.035;
-
-    game.boss = {
-
-        name:
-            template.name,
-
-        title:
-            template.title,
-
-        hp:
-            template.hp *
-            scale,
-
-        maxHp:
-            template.hp *
-            scale,
-
-        speed:
-            template.speed,
-
-        color:
-            template.color,
-
-        radius:
-            45 +
-            random(0,15),
-
-        x:
-            W/2,
-
-        y:
-            150,
-
-        attackTimer:
-            1,
-
-        phase:
-            1,
-
-        attack:"orb",
-        abilities:template.abilities || ["orb","spread","slam"],
-        abilityIndex:0
-
-    };
-
-    $("encounterName")
-        .textContent =
-        `${template.name} // ${template.title}`;
-
-    $("bossHP")
-        .style.width =
-        "100%";
-
-    $("phaseText")
-        .textContent =
-        "PHASE I";
-
-    flashMessage(
-        template.name,
-        template.color
-    );
-
-}
-
-
-/* ============================================================
-   SHOP
-============================================================ */
-
-function openShop() {
-
-    game.active = false;
-
-    showScreen(
-        "shopScreen"
-    );
-
-    renderShop();
-
-}
-
-
-function renderShop() {
-
-    const choices = [];
-
-    for(
-        let i=0;
-        i<4;
-        i++
-    ) {
-
-        if(
-            Math.random() < .55
-        ) {
-
-            const card =
-                choose(cardPool);
-
-            choices.push({
-
-                type: "card",
-
-                item: card,
-
-                price:
-                    randomInt(
-                        50,
-                        130
-                    )
-
-            });
-
-        } else {
-
-            const ability =
-                choose(abilityPool);
-
-            choices.push({
-
-                type: "ability",
-
-                item: ability,
-
-                price:
-                    randomInt(
-                        75,
-                        170
-                    )
-
-            });
-
-        }
-
-    }
-
-    for(let i=0;i<2;i++){
-        const weapon=choose(weaponPool);
-        choices.push({type:"weapon",item:weapon,price:randomInt(120,260)});
-    }
-
-    choices.push({
-
-        type: "heal",
-
-        item: {
-
-            name:
-                "VOID RESTORATION",
-
-            icon:
-                "♥",
-
-            rarity:
-                "legendary",
-
-            description:
-                "Restore 45 HP."
-
-        },
-
-        price: 60
-
-    });
-
-    $("shopItems").innerHTML = "";
-
-    choices.forEach(
-        (choice,index) => {
-
-            const div =
-                document.createElement(
-                    "div"
-                );
-
-            div.className =
-                "shop-item";
-
-            div.innerHTML = `
-
-                <div class="shop-icon">
-                    ${choice.item.icon}
-                </div>
-
-                <div class="
-                    rarity
-                    ${choice.item.rarity}
-                ">
-                    ${
-                        choice.item.rarity
-                        .toUpperCase()
-                    }
-                </div>
-
-                <h3>
-                    ${choice.item.name}
-                </h3>
-
-                <p class="tip">
-                    ${choice.item.description}
-                </p>
-
-                <div class="price">
-                    ◆ ${choice.price}
-                </div>
-
-                <button>
-                    BUY
-                </button>
-
-            `;
-
-            div.querySelector(
-                "button"
-            ).addEventListener(
-                "click",
-                () => {
-
-                    buyShopItem(
-                        choice
-                    );
-
-                }
-            );
-
-            $("shopItems")
-                .appendChild(div);
-
-        }
-    );
-
-}
-
-
-function buyShopItem(choice) {
-
-    if(
-        game.coins <
-        choice.price
-    ) {
-
-        flashMessage(
-            "NOT ENOUGH SHARDS",
-            "#ff4268"
-        );
-
-        return;
-
-    }
-
-    game.coins -=
-        choice.price;
-
-    if(choice.type==="weapon"){
-        if(!game.weapons.some(w=>w.id===choice.item.id)){
-            game.weapons.push(choice.item);
-            equipWeapon(choice.item);
-            flashMessage("WEAPON EQUIPPED","#ffc857");
-        }else{
-            player.damageMultiplier+=.10;
-            flashMessage("DUPLICATE → +10% DAMAGE","#ffc857");
-        }
-    }
-
-    if(
-        choice.type ===
-        "heal"
-    ) {
-
-        player.hp =
-            Math.min(
-                player.maxHp,
-                player.hp+45
-            );
-
-        flashMessage(
-            "HEALED",
-            "#55e69b"
-        );
-
-    }
-
-    if(
-        choice.type ===
-        "card"
-    ) {
-
-        addCard(
-            choice.item
-        );
-
-        flashMessage(
-            choice.item.name,
-            "#8d6bff"
-        );
-
-    }
-
-    if(
-        choice.type ===
-        "ability"
-    ) {
-
-        if(
-            !game.abilities
-                .some(
-                    a =>
-                        a.id ===
-                        choice.item.id
-                )
-        ) {
-
-            game.abilities.push(
-                choice.item
-            );
-
-            flashMessage(
-                "ABILITY UNLOCKED",
-                "#ffc857"
-            );
-
-        } else {
-
-            player.damageMultiplier +=
-                .12;
-
-            flashMessage(
-                "DUPLICATE → +12% DAMAGE",
-                "#ffc857"
-            );
-
-        }
-
-    }
-
-    updateHUD();
-
-}
-
-
-/* ============================================================
-   SHOP EXIT
-============================================================ */
-
-$("leaveShopButton")
-    .addEventListener(
-        "click",
-        () => {
-
-            openMap();
-
-        }
-    );
-
-
-/* ============================================================
-   CARDS
-============================================================ */
-
-function addCard(card) {
-
-    if(
-        game.cards.some(
-            c =>
-                c.name ===
-                card.name
-        )
-    ) {
-
-        return;
-
-    }
-
-    game.cards.push(card);
-
-    if(card.stat === "Damage") {
-
-        player.damageMultiplier +=
-            card.value / 100;
-
-    }
-
-    if(card.stat === "Speed") {
-
-        player.speed *=
-            1 +
-            card.value/100;
-
-    }
-
-    if(card.stat === "Max HP") {
-
-        player.maxHp +=
-            card.value;
-
-        player.hp +=
-            card.value;
-
-    }
-
-    if(card.stat === "Max Mana") {
-
-        player.maxMana +=
-            card.value;
-
-        player.mana +=
-            card.value;
-
-    }
-
-}
-
-
-/* ============================================================
-   INVENTORY
-============================================================ */
-
-document.querySelectorAll(
-    ".tab"
-).forEach(
-    tab => {
-
-        tab.addEventListener(
-            "click",
-            () => {
-
-                document
-                    .querySelectorAll(
-                        ".tab"
-                    )
-                    .forEach(
-                        t =>
-                            t.classList
-                             .remove(
-                                 "active"
-                             )
-                    );
-
-                tab.classList.add(
-                    "active"
-                );
-
-                renderInventory(
-                    tab.dataset.tab
-                );
-
-            }
-        );
-
-    }
-);
-
-
-function renderInventory(tab) {
-
-    const content =
-        $("inventoryContent");
-
-    if(tab === "cards") {
-
-        if(
-            game.cards.length === 0
-        ) {
-
-            content.innerHTML = `
-                <div class="tip">
-                    No cards yet.
-                    Find cards in shops.
-                </div>
-            `;
-
-            return;
-
-        }
-
-        content.innerHTML =
-            `<div class="card-grid"></div>`;
-
-        const grid =
-            content.querySelector(
-                ".card-grid"
-            );
-
-        game.cards.forEach(
-            card => {
-
-                const div =
-                    document.createElement(
-                        "div"
-                    );
-
-                div.className =
-                    "card";
-
-                div.innerHTML = `
-
-                    <div class="
-                        rarity
-                        ${card.rarity}
-                    ">
-                        ${
-                            card.rarity
-                            .toUpperCase()
-                        }
-                    </div>
-
-                    <div class="card-icon">
-                        ${card.icon}
-                    </div>
-
-                    <h3>
-                        ${card.name}
-                    </h3>
-
-                    <p>
-                        ${card.description}
-                    </p>
-
-                    <div class="stat-line">
-                        <span>
-                            ${card.stat}
-                        </span>
-
-                        <b>
-                            +${card.value}
-                        </b>
-                    </div>
-
-                `;
-
-                grid.appendChild(
-                    div
-                );
-
-            }
-        );
-
-    }
-
-
-    if(tab === "abilities") {
-
-        content.innerHTML =
-            `<div class="card-grid"></div>`;
-
-        const grid =
-            content.querySelector(
-                ".card-grid"
-            );
-
-        game.abilities.forEach(
-            ability => {
-
-                const div =
-                    document.createElement(
-                        "div"
-                    );
-
-                div.className =
-                    "card";
-
-                const equipped =
-                    game.equippedAbility ===
-                    ability.id;
-
-                div.innerHTML = `
-
-                    <div class="
-                        rarity
-                        ${ability.rarity}
-                    ">
-                        ${
-                            ability.rarity
-                            .toUpperCase()
-                        }
-                    </div>
-
-                    <div class="card-icon">
-                        ${ability.icon}
-                    </div>
-
-                    <h3>
-                        ${ability.name}
-                    </h3>
-
-                    <p>
-                        ${ability.description}
-                    </p>
-
-                    <div class="stat-line">
-                        <span>
-                            Mana Cost
-                        </span>
-
-                        <b>
-                            ${ability.cost}
-                        </b>
-                    </div>
-
-                    <br>
-
-                    <button>
-                        ${
-                            equipped
-                            ? "EQUIPPED"
-                            : "EQUIP"
-                        }
-                    </button>
-
-                `;
-
-                if(equipped) {
-
-                    div.style.borderColor =
-                        "#8d6bff";
-
-                }
-
-                div.querySelector(
-                    "button"
-                ).addEventListener(
-                    "click",
-                    () => {
-
-                        game.equippedAbility =
-                            ability.id;
-
-                        renderInventory(
-                            "abilities"
-                        );
-
-                        flashMessage(
-                            "ABILITY EQUIPPED",
-                            "#8d6bff"
-                        );
-
-                    }
-                );
-
-                grid.appendChild(
-                    div
-                );
-
-            }
-        );
-
-    }
-
-
-    if(tab === "weapons"){
-        content.innerHTML=`<div class="card-grid"></div>`;
-        const grid=content.querySelector(".card-grid");
-        game.weapons.forEach(w=>{
-            const div=document.createElement("div");
-            div.className="card";
-            const equipped=game.equippedWeapon===w.id;
-            div.innerHTML=`<div class="rarity ${w.rarity}">${w.rarity.toUpperCase()}</div><div class="card-icon">${w.icon}</div><h3>${w.name}</h3><p>${w.description}</p><div class="stat-line"><span>Damage</span><b>${w.damage}</b></div><div class="stat-line"><span>Range</span><b>${w.range}</b></div><div class="stat-line"><span>Cooldown</span><b>${w.cooldown}s</b></div><br><button>${equipped?"EQUIPPED":"EQUIP"}</button>`;
-            if(equipped)div.style.borderColor="#ffc857";
-            div.querySelector("button").onclick=()=>{equipWeapon(w);renderInventory("weapons");flashMessage("WEAPON EQUIPPED","#ffc857");};
-            grid.appendChild(div);
-        });
-        return;
-    }
-
-    if(tab === "stats") {
-
-        const damage =
-            Math.round(
-                55 *
-                player.damageMultiplier
-            );
-
-        content.innerHTML = `
-
-            <div class="card">
-
-                <h3>
-                    RUN LOADOUT
-                </h3>
-
-                <div class="stat-line">
-                    <span>
-                        Attack Damage
-                    </span>
-                    <b>
-                        ${damage}
-                    </b>
-                </div>
-
-                <div class="stat-line">
-                    <span>
-                        Maximum HP
-                    </span>
-                    <b>
-                        ${player.maxHp}
-                    </b>
-                </div>
-
-                <div class="stat-line">
-                    <span>
-                        Maximum Mana
-                    </span>
-                    <b>
-                        ${player.maxMana}
-                    </b>
-                </div>
-
-                <div class="stat-line">
-                    <span>
-                        Movement Speed
-                    </span>
-                    <b>
-                        ${player.speed.toFixed(1)}
-                    </b>
-                </div>
-
-                <div class="stat-line">
-                    <span>
-                        Shards
-                    </span>
-                    <b>
-                        ◆ ${game.coins}
-                    </b>
-                </div>
-
-                <div class="stat-line">
-                    <span>
-                        Cards
-                    </span>
-                    <b>
-                        ${game.cards.length}
-                    </b>
-                </div>
-
-                <div class="stat-line">
-                    <span>
-                        Abilities
-                    </span>
-                    <b>
-                        ${game.abilities.length}
-                    </b>
-                </div>
-
-                <div class="stat-line">
-                    <span>
-                        Kills
-                    </span>
-                    <b>
-                        ${game.kills}
-                    </b>
-                </div>
-
-            </div>
-
-        `;
-
-    }
-
-}
-
-
-/* ============================================================
-   INVENTORY CLOSE
-============================================================ */
-
-$("inventoryClose").addEventListener("click",()=>{
-    game.paused=false;
-    showScreen(game.currentFloorType ? null : "mainMenu");
-});
-
-
-/* ============================================================
-   KEYBINDS
-============================================================ */
-
-function prettyKey(key) {
-
-    if(key === "shift")
-        return "SHIFT";
-
-    if(key === " ")
-        return "SPACE";
-
-    return key.toUpperCase();
-
-}
-
-
-function renderKeybinds() {
-
-    const list =
-        $("bindList");
-
-    list.innerHTML = "";
-
-    Object.entries(
-        binds
-    ).forEach(
-        ([action,key]) => {
-
-            const row =
-                document.createElement(
-                    "div"
-                );
-
-            row.className =
-                "bind-row";
-
-            const name =
-                document.createElement(
-                    "span"
-                );
-
-            name.textContent =
-                action.toUpperCase();
-
-            const button =
-                document.createElement(
-                    "button"
-                );
-
-            button.textContent =
-                prettyKey(key);
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    bindingWaiting =
-                        action;
-
-                    button.textContent =
-                        "PRESS KEY...";
-
-                }
-            );
-
-            row.appendChild(name);
-            row.appendChild(button);
-
-            list.appendChild(row);
-
-        }
-    );
-
-    $("dashKeyDisplay")
-        .textContent =
-        prettyKey(binds.dash);
-
-    $("abilityKeyDisplay")
-        .textContent =
-        prettyKey(binds.ability);
-
-}
-
-
-$("keybindClose")
-    .addEventListener(
-        "click",
-        () =>
-            showScreen(
-                "mainMenu"
-            )
-    );
-
-
-/* ============================================================
-   SETTINGS
-============================================================ */
-
-let screenShake = true;
-let particleQuality = "HIGH";
-
-$("shakeButton")
-    .addEventListener(
-        "click",
-        () => {
-
-            screenShake =
-                !screenShake;
-
-            $("shakeButton")
-                .textContent =
-                screenShake
-                ? "ON"
-                : "OFF";
-
-        }
-    );
-
-
-$("particleButton")
-    .addEventListener(
-        "click",
-        () => {
-
-            particleQuality =
-                particleQuality === "HIGH"
-                ? "MEDIUM"
-                : particleQuality === "MEDIUM"
-                ? "LOW"
-                : "HIGH";
-
-            $("particleButton")
-                .textContent =
-                particleQuality;
-
-        }
-    );
-
-
-$("settingsClose")
-    .addEventListener(
-        "click",
-        () =>
-            showScreen(
-                "mainMenu"
-            )
-    );
-
-
-/* ============================================================
-   PAUSE
-============================================================ */
-
-function togglePause() {
-
-    if(!game.active)
-        return;
-
-    game.paused =
-        !game.paused;
-
-    if(game.paused) {
-
-        showScreen(
-            "pauseScreen"
-        );
-
-    } else {
-
-        hideAllScreens();
-
-    }
-
-}
-
-
-$("resumeButton")
-    .addEventListener(
-        "click",
-        togglePause
-    );
-
-
-$("abandonButton")
-    .addEventListener(
-        "click",
-        () => {
-
-            game.active = false;
-
-            $("hud")
-                .classList
-                .add("hidden");
-
-            showScreen(
-                "mainMenu"
-            );
-
-        }
-    );
-
-
-/* ============================================================
-   PLAYER ATTACK
-============================================================ */
-
-function attack() {
-
-    if(
-        player.attackCooldown > 0
-    )
-        return;
-
-    player.attackCooldown =
-        player.weaponCooldown;
-
-    const angle =
-        Math.atan2(
-            mouse.y-player.y,
-            mouse.x-player.x
-        );
-
-    game.slashes.push({
-
-        x: player.x,
-        y: player.y,
-
-        angle,
-
-        life: .18,
-        maxLife: .18
-
-    });
-
-    const damage =
-        player.weaponDamage *
-        player.damageMultiplier;
-
-
-    if(
-        game.currentFloorType ===
-        "enemy"
-    ) {
-
-        game.enemies.forEach(
-            enemy => {
-
-                const dx =
-                    enemy.x-player.x;
-
-                const dy =
-                    enemy.y-player.y;
-
-                const distance =
-                    Math.hypot(
-                        dx,
-                        dy
-                    );
-
-                if(
-                    distance >
-                    player.weaponRange+enemy.radius
-                )
-                    return;
-
-                const targetAngle =
-                    Math.atan2(
-                        dy,
-                        dx
-                    );
-
-                const difference =
-                    Math.abs(
-                        Math.atan2(
-                            Math.sin(
-                                targetAngle-
-                                angle
-                            ),
-                            Math.cos(
-                                targetAngle-
-                                angle
-                            )
-                        )
-                    );
-
-                if(
-                    difference <
-                    1.2
-                ) {
-
-                    enemy.hp -=
-                        damage;
-
-                    damageText(
-                        enemy.x,
-                        enemy.y,
-                        "-" +
-                        Math.round(
-                            damage
-                        )
-                    );
-
-                }
-
-            }
-        );
-
-    }
-
-
-    if(game.boss) {
-
-        const boss =
-            game.boss;
-
-        const dx =
-            boss.x-player.x;
-
-        const dy =
-            boss.y-player.y;
-
-        const distance =
-            Math.hypot(
-                dx,
-                dy
-            );
-
-        if(
-            distance <
-            player.weaponRange+10+boss.radius
-        ) {
-
-            const targetAngle =
-                Math.atan2(
-                    dy,
-                    dx
-                );
-
-            const difference =
-                Math.abs(
-                    Math.atan2(
-                        Math.sin(
-                            targetAngle-
-                            angle
-                        ),
-                        Math.cos(
-                            targetAngle-
-                            angle
-                        )
-                    )
-                );
-
-            if(
-                difference <
-                1.2
-            ) {
-
-                boss.hp -=
-                    damage;
-
-                damageText(
-                    boss.x,
-                    boss.y,
-                    "-" +
-                    Math.round(
-                        damage
-                    )
-                );
-
-            }
-
-        }
-
-    }
-
-    explode(
-        player.x +
-        Math.cos(angle)*35,
-
-        player.y +
-        Math.sin(angle)*35,
-
-        "#dbe4ff",
-
-        8
-    );
-
-}
-
-
-/* ============================================================
-   DASH
-============================================================ */
-
-function dash() {
-
-    if(
-        player.dashCooldown >
-        0
-    )
-        return;
-
-    player.dashCooldown =
-        .95 *
-        (
-            hasCard("DASH MASTER")
-            ? .75
-            : 1
-        );
-
-    player.invincible =
-        .32;
-
-    const angle =
-        Math.atan2(
-            mouse.y-player.y,
-            mouse.x-player.x
-        );
-
-    player.x +=
-        Math.cos(angle)*145;
-
-    player.y +=
-        Math.sin(angle)*145;
-
-    player.x =
-        Math.max(
-            25,
-            Math.min(
-                W-25,
-                player.x
-            )
-        );
-
-    player.y =
-        Math.max(
-            70,
-            Math.min(
-                H-25,
-                player.y
-            )
-        );
-
-    explode(
-        player.x,
-        player.y,
-        "#70a0ff",
-        25
-    );
-
-}
-
-
-/* ============================================================
-   ABILITY
-============================================================ */
-
-function useAbility() {
-
-    if(
-        player.abilityCooldown >
-        0
-    )
-        return;
-
-    const ability =
-        game.abilities.find(
-            a =>
-                a.id ===
-                game.equippedAbility
-        );
-
-    if(!ability)
-        return;
-
-    if(
-        player.mana <
-        ability.cost
-    ) {
-
-        flashMessage(
-            "NOT ENOUGH MANA",
-            "#55b7ff"
-        );
-
-        return;
-
-    }
-
-    player.mana -=
-        ability.cost;
-
-    player.abilityCooldown =
-        3.5;
-
-    if(ability.id === "arc") {
-
-        const angle =
-            Math.atan2(
-                mouse.y-player.y,
-                mouse.x-player.x
-            );
-
-        for(
-            let i=-1;
-            i<=1;
-            i++
-        ) {
-
-            const a =
-                angle+i*.18;
-
-            shoot(
-                player.x,
-                player.y,
-
-                player.x+
-                Math.cos(a)*100,
-
-                player.y+
-                Math.sin(a)*100,
-
-                8,
-
-                8,
-
-                90*
-                player.damageMultiplier,
-
-                "#9f8cff",
-
-                true
-            );
-
-        }
-
-    }
-
-
-    if(ability.id === "nova") {
-
-        explode(
-            player.x,
-            player.y,
-            "#b66cff",
-            60
-        );
-
-        if(game.boss) {
-
-            if(
-                distance(
-                    player,
-                    game.boss
-                ) <
-                210
-            ) {
-
-                game.boss.hp -=
-                    150 *
-                    player.damageMultiplier;
-
-            }
-
-        }
-
-        game.enemies.forEach(
-            enemy => {
-
-                if(
-                    distance(
-                        player,
-                        enemy
-                    ) <
-                    210
-                ) {
-
-                    enemy.hp -=
-                        150 *
-                        player.damageMultiplier;
-
-                }
-
-            }
-        );
-
-    }
-
-
-    if(ability.id === "blink") {
-
-        const angle =
-            Math.atan2(
-                mouse.y-player.y,
-                mouse.x-player.x
-            );
-
-        player.invincible =
-            .45;
-
-        player.x +=
-            Math.cos(angle)*220;
-
-        player.y +=
-            Math.sin(angle)*220;
-
-        player.x =
-            Math.max(
-                25,
-                Math.min(
-                    W-25,
-                    player.x
-                )
-            );
-
-        player.y =
-            Math.max(
-                70,
-                Math.min(
-                    H-25,
-                    player.y
-                )
-            );
-
-        explode(
-            player.x,
-            player.y,
-            "#ffc857",
-            35
-        );
-
-    }
-
-
-    if(ability.id === "storm") {
-
-        for(
-            let i=0;
-            i<7;
-            i++
-        ) {
-
-            setTimeout(
-                () => {
-
-                    strike(
-                        random(
-                            50,
-                            W-50
-                        ),
-
-                        random(
-                            100,
-                            H*.7
-                        )
-                    );
-
-                },
-
-                i*100
-            );
-
-        }
-
-    }
-
-
-    if(ability.id === "frost") {
-
-        explode(
-            player.x,
-            player.y,
-            "#55cfff",
-            45
-        );
-
-        game.enemies.forEach(
-            enemy => {
-
-                if(
-                    distance(
-                        player,
-                        enemy
-                    ) < 200
-                ) {
-
-                    enemy.hp -=
-                        110 *
-                        player.damageMultiplier;
-
-                }
-
-            }
-        );
-
-    }
-
-}
-
-
-/* ============================================================
-   PROJECTILES
-============================================================ */
-
-function shoot(
-    x,
-    y,
-    tx,
-    ty,
-    speed,
-    radius,
-    damage,
-    color,
-    friendly=false
-) {
-
-    const angle =
-        Math.atan2(
-            ty-y,
-            tx-x
-        );
-
-    game.projectiles.push({
-
-        x,
-        y,
-
-        vx:
-            Math.cos(angle)*
-            speed,
-
-        vy:
-            Math.sin(angle)*
-            speed,
-
-        radius,
-
-        damage,
-
-        color,
-
-        friendly,
-
-        life: 5
-
-    });
-
-}
-
-
-/* ============================================================
-   STORM STRIKE
-============================================================ */
-
-function strike(x,y) {
-
-    explode(
-        x,
-        y,
-        "#55b7ff",
-        20
-    );
-
-    if(
-        game.boss &&
-        distance(
-            {
-                x,
-                y
-            },
-            game.boss
-        ) < 55
-    ) {
-
-        game.boss.hp -=
-            110 *
-            player.damageMultiplier;
-
-    }
-
-    game.enemies.forEach(
-        enemy => {
-
-            if(
-                distance(
-                    {
-                        x,
-                        y
-                    },
-                    enemy
-                ) < 55
-            ) {
-
-                enemy.hp -=
-                    110 *
-                    player.damageMultiplier;
-
-            }
-
-        }
-    );
-
-}
-
-
-/* ============================================================
-   BOSS ATTACKS
-============================================================ */
-
-function bossAttack(type) {
-
-    const boss =
-        game.boss;
-
-    if(!boss)
-        return;
-
-
-    if(type === "orb") {
-
-        shoot(
-            boss.x,
-            boss.y,
-
-            player.x,
-            player.y,
-
-            3.5,
-            18,
-            11,
-            boss.color
-        );
-
-    }
-
-
-    if(type === "spread") {
-
-        const base =
-            Math.atan2(
-                player.y-boss.y,
-                player.x-boss.x
-            );
-
-        const count =
-            boss.phase === 3
-            ? 9
-            : 6;
-
-        for(
-            let i=0;
-            i<count;
-            i++
-        ) {
-
-            const angle =
-                base+
-                (
-                    i-
-                    (count-1)/2
-                )*.2;
-
-            shoot(
-                boss.x,
-                boss.y,
-
-                boss.x+
-                Math.cos(angle)*100,
-
-                boss.y+
-                Math.sin(angle)*100,
-
-                4,
-
-                13,
-
-                8,
-
-                boss.color
-            );
-
-        }
-
-    }
-
-
-    if(type === "rain") {
-
-        const amount =
-            boss.phase === 3
-            ? 15
-            : 9;
-
-        for(
-            let i=0;
-            i<amount;
-            i++
-        ) {
-
-            shoot(
-                random(
-                    30,
-                    W-30
-                ),
-
-                -30,
-
-                random(
-                    30,
-                    W-30
-                ),
-
-                H,
-
-                random(4,7),
-
-                10,
-
-                10,
-
-                boss.color
-            );
-
-        }
-
-    }
-
-
-    if(type === "slam") {
-
-        const radius =
-            120+
-            boss.phase*35;
-
-        game.particles.push({
-
-            ring: true,
-
-            x:
-                boss.x,
-
-            y:
-                boss.y,
-
-            radius: 5,
-
-            maxRadius:
-                radius,
-
-            life: .5,
-
-            color:
-                boss.color
-
-        });
-
-        if(
-            distance(
-                player,
-                boss
-            ) <
-            radius
-        ) {
-
-            hurt(25);
-
-        }
-
-    }
-
-
-    if(type === "dash") {
-
-        const angle =
-            Math.atan2(
-                player.y-boss.y,
-                player.x-boss.x
-            );
-
-        boss.x +=
-            Math.cos(angle)*
-            160;
-
-        boss.y +=
-            Math.sin(angle)*
-            160;
-
-        explode(
-            boss.x,
-            boss.y,
-            boss.color,
-            30
-        );
-
-        if(
-            distance(
-                player,
-                boss
-            ) <
-            boss.radius+55
-        ) {
-
-            hurt(25);
-
-        }
-
-    }
-
-
-    if(type === "teleport") {
-
-        explode(
-            boss.x,
-            boss.y,
-            boss.color,
-            25
-        );
-
-        boss.x =
-            random(
-                70,
-                W-70
-            );
-
-        boss.y =
-            random(
-                100,
-                H*.5
-            );
-
-        explode(
-            boss.x,
-            boss.y,
-            boss.color,
-            25
-        );
-
-    }
-
-}
-
-
-    if(type==="vortex"){
-        for(let i=0;i<10;i++){const a=i*Math.PI*2/10+performance.now()/1200;shoot(boss.x,boss.y,boss.x+Math.cos(a)*80,boss.y+Math.sin(a)*80,3.2,14,9,boss.color);}
-        if(distance(player,boss)<180)hurt(12);
-    }
-    if(type==="mines")for(let i=0;i<5;i++)game.particles.push({mine:true,x:random(60,W-60),y:random(120,H-80),life:2.5,color:boss.color});
-    if(type==="laser"){
-        const a=Math.atan2(player.y-boss.y,player.x-boss.x);
-        game.particles.push({laser:true,x:boss.x,y:boss.y,angle:a,life:.55,color:boss.color});
-        const cross=Math.abs(Math.sin(a)*(player.x-boss.x)-Math.cos(a)*(player.y-boss.y));
-        if(cross<28&&Math.hypot(player.x-boss.x,player.y-boss.y)<520)hurt(28);
-    }
-    if(type==="meteor")for(let i=0;i<3;i++)game.particles.push({meteor:true,x:random(50,W-50),y:random(120,H-70),life:1.2,color:boss.color});
-    if(type==="summon")for(let i=0;i<2;i++){const t=choose(enemyTypes),hp=t.hp*(1+game.floor*.08);game.enemies.push({name:t.name,hp,maxHp:hp,speed:t.speed,radius:t.radius,damage:t.damage,reward:t.reward,color:t.color,x:boss.x+random(-80,80),y:boss.y+random(-40,80),attackTimer:1});}
-    if(type==="drain"&&distance(player,boss)<260){hurt(18);boss.hp=Math.min(boss.maxHp,boss.hp+35);}
-    if(type==="shockwave"){const r=100+boss.phase*45;game.particles.push({ring:true,x:boss.x,y:boss.y,radius:5,maxRadius:r,life:.7,color:boss.color});if(distance(player,boss)<r)hurt(30);}
-    if(type==="spiral")for(let i=0;i<8;i++){const a=i*Math.PI/4+performance.now()/500;shoot(boss.x,boss.y,boss.x+Math.cos(a)*100,boss.y+Math.sin(a)*100,4.5,12,8,boss.color);}
-    if(type==="cage")for(let i=0;i<8;i++){const a=i*Math.PI/4;shoot(boss.x,boss.y,player.x+Math.cos(a)*100,player.y+Math.sin(a)*100,2.8,15,8,boss.color);}
-    if(type==="clone"){explode(boss.x,boss.y,boss.color,35);for(let i=0;i<2;i++){const hp=180+game.floor*8;game.enemies.push({name:"CLONE",hp,maxHp:hp,speed:1.6,radius:18,damage:12,reward:15,color:boss.color,x:boss.x+random(-100,100),y:boss.y+random(-80,100),attackTimer:1});}}
-    if(type==="heal"){boss.hp=Math.min(boss.maxHp,boss.hp+boss.maxHp*.08);explode(boss.x,boss.y,boss.color,20);}
-    if(type==="walls")for(let i=0;i<4;i++)shoot(random(30,W-30),0,random(30,W-30),H,2.5,16,10,boss.color);
-
-/* ============================================================
-   ENEMY UPDATE
-============================================================ */
-
-function updateEnemies(dt) {
-
-    for(
-        let i =
-            game.enemies.length-1;
-
-        i >= 0;
-
-        i--
-    ) {
-
-        const enemy =
-            game.enemies[i];
-
-        const dx =
-            player.x-enemy.x;
-
-        const dy =
-            player.y-enemy.y;
-
-        const d =
-            Math.hypot(
-                dx,
-                dy
-            ) || 1;
-
-        enemy.x +=
-            dx/d*
-            enemy.speed*
-            dt*40;
-
-        enemy.y +=
-            dy/d*
-            enemy.speed*
-            dt*40;
-
-        enemy.attackTimer -=
-            dt;
-
-        if(
-            d <
-            enemy.radius+
-            player.radius+
-            8
-        ) {
-
-            if(
-                enemy.attackTimer <= 0
-            ) {
-
-                hurt(
-                    enemy.damage
-                );
-
-                enemy.attackTimer =
-                    .9;
-
-            }
-
-        }
-
-
-        if(enemy.hp <= 0) {
-
-            let reward =
-                enemy.reward;
-
-            const bonus =
-                getCardValue(
-                    "Coin Gain"
-                );
-
-            reward *=
-                1+bonus/100;
-
-            game.coins +=
-                Math.round(
-                    reward
-                );
-
-            game.kills++;
-
-            if(
-                hasCard(
-                    "VAMPIRIC EDGE"
-                )
-            ) {
-
-                player.hp =
-                    Math.min(
-                        player.maxHp,
-                        player.hp+2
-                    );
-
-            }
-
-            explode(
-                enemy.x,
-                enemy.y,
-                enemy.color,
-                22
-            );
-
-            damageText(
-                enemy.x,
-                enemy.y,
-                "+"+
-                Math.round(
-                    reward
-                )+
-                " ◆"
-            );
-
-            game.enemies.splice(
-                i,
-                1
-            );
-
-        }
-
-    }
-
-
-    $("phaseText")
-        .textContent =
-        `${game.enemies.length} ENEMIES REMAINING`;
-
-
-    if(
-        game.enemies.length === 0
-    ) {
-
-        completeFloor();
-
-    }
-
-}
-
-
-/* ============================================================
-   BOSS UPDATE
-============================================================ */
-
-function updateBoss(dt) {
-
-    const boss =
-        game.boss;
-
-    if(!boss)
-        return;
-
-    const dx =
-        player.x-boss.x;
-
-    const dy =
-        player.y-boss.y;
-
-    const d =
-        Math.hypot(
-            dx,
-            dy
-        ) || 1;
-
-    boss.x +=
-        dx/d*
-        boss.speed*
-        dt*35;
-
-    boss.y +=
-        dy/d*
-        boss.speed*
-        dt*35;
-
-    boss.x =
-        Math.max(
-            70,
-            Math.min(
-                W-70,
-                boss.x
-            )
-        );
-
-    boss.y =
-        Math.max(
-            90,
-            Math.min(
-                H*.55,
-                boss.y
-            )
-        );
-
-
-    boss.attackTimer -=
-        dt;
-
-
-    if(
-        boss.attackTimer <= 0
-    ) {
-
-        boss.attack=boss.abilities[boss.abilityIndex % boss.abilities.length];
-        bossAttack(boss.attack);
-        boss.abilityIndex++;
-
-        let delay =
-            random(
-                .8,
-                1.5
-            );
-
-        if(
-            boss.phase >= 2
-        )
-            delay *= .78;
-
-        if(
-            boss.phase >= 3
-        )
-            delay *= .62;
-
-        boss.attackTimer =
-            delay;
-
-    }
-
-
-    if(
-        d <
-        boss.radius+
-        player.radius+
-        5
-    ) {
-
-        hurt(
-            10*dt
-        );
-
-    }
-
-
-    const ratio =
-        boss.hp/
-        boss.maxHp;
-
-
-    if(
-        ratio <= .66 &&
-        boss.phase === 1
-    ) {
-
-        boss.phase = 2;
-
-        boss.speed *= 1.2;
-
-        flashMessage(
-            "PHASE II",
-            boss.color
-        );
-
-    }
-
-
-    if(
-        ratio <= .33 &&
-        boss.phase === 2
-    ) {
-
-        boss.phase = 3;
-
-        boss.speed *= 1.3;
-
-        flashMessage(
-            "ENRAGED",
-            "#ff4268"
-        );
-
-    }
-
-
-    $("bossHP")
-        .style.width =
-        Math.max(
-            0,
-            ratio*100
-        )+"%";
-
-
-    $("phaseText")
-        .textContent =
-        `PHASE ${["I","II","III"][boss.phase-1]}`;
-
-
-    if(
-        boss.hp <= 0
-    ) {
-
-        defeatBoss();
-
-    }
-
-}
-
-
-/* ============================================================
-   PROJECTILE UPDATE
-============================================================ */
-
-function updateProjectiles(dt) {
-
-    for(
-        let i =
-            game.projectiles.length-1;
-
-        i >= 0;
-
-        i--
-    ) {
-
-        const p =
-            game.projectiles[i];
-
-        p.x +=
-            p.vx*
-            dt*60;
-
-        p.y +=
-            p.vy*
-            dt*60;
-
-        p.life -=
-            dt;
-
-
-        if(p.friendly) {
-
-            if(
-                game.boss &&
-                distance(
-                    p,
-                    game.boss
-                ) <
-                p.radius+
-                game.boss.radius
-            ) {
-
-                game.boss.hp -=
-                    p.damage;
-
-                p.life = 0;
-
-            }
-
-
-            for(
-                const enemy of
-                game.enemies
-            ) {
-
-                if(
-                    distance(
-                        p,
-                        enemy
-                    ) <
-                    p.radius+
-                    enemy.radius
-                ) {
-
-                    enemy.hp -=
-                        p.damage;
-
-                    p.life = 0;
-
-                    break;
-
-                }
-
-            }
-
-        } else {
-
-            if(
-                distance(
-                    p,
-                    player
-                ) <
-                p.radius+
-                player.radius
-            ) {
-
-                hurt(
-                    p.damage
-                );
-
-                p.life = 0;
-
-            }
-
-        }
-
-
-        if(
-            p.life <= 0 ||
-            p.x < -100 ||
-            p.x > W+100 ||
-            p.y < -100 ||
-            p.y > H+100
-        ) {
-
-            game.projectiles.splice(
-                i,
-                1
-            );
-
-        }
-
-    }
-
-}
-
-
-/* ============================================================
-   PLAYER UPDATE
-============================================================ */
-
-function updatePlayer(dt) {
-
-    let dx = 0;
-    let dy = 0;
-
-    if(keys[binds.up])
-        dy--;
-
-    if(keys[binds.down])
-        dy++;
-
-    if(keys[binds.left])
-        dx--;
-
-    if(keys[binds.right])
-        dx++;
-
-
-    if(dx || dy) {
-
-        const length =
-            Math.hypot(
-                dx,
-                dy
-            );
-
-        player.x +=
-            dx/length*
-            player.speed*
-            dt*60;
-
-        player.y +=
-            dy/length*
-            player.speed*
-            dt*60;
-
-    }
-
-
-    player.x =
-        Math.max(
-            25,
-            Math.min(
-                W-25,
-                player.x
-            )
-        );
-
-    player.y =
-        Math.max(
-            70,
-            Math.min(
-                H-25,
-                player.y
-            )
-        );
-
-
-    player.attackCooldown -=
-        dt;
-
-    player.dashCooldown -=
-        dt;
-
-    player.abilityCooldown -=
-        dt;
-
-    player.invincible -=
-        dt;
-
-
-    player.mana =
-        Math.min(
-            player.maxMana,
-            player.mana+
-            10*dt
-        );
-
-
-    if(mouse.down)
-        attack();
-
-}
-
-
-/* ============================================================
-   DAMAGE
-============================================================ */
-
-function hurt(amount) {
-
-    if(
-        player.invincible > 0
-    )
-        return;
-
-    player.hp -=
-        amount;
-
-    player.invincible =
-        .3;
-
-    $("damageFlash")
-        .style.opacity =
-        ".35";
-
-    setTimeout(
-        () => {
-
-            $("damageFlash")
-                .style.opacity =
-                "0";
-
-        },
-
-        90
-    );
-
-
-    if(screenShake) {
-
-        game.shake = 8;
-
-    }
-
-
-    if(player.hp <= 0) {
-
-        player.hp = 0;
-
-        defeat();
-
-    }
-
-}
-
-
-/* ============================================================
-   FLOOR COMPLETE
-============================================================ */
-
-function completeFloor() {
-
-    game.active = false;
-
-    const reward =
-        35+
-        game.floor*10;
-
-    game.coins +=
-        reward;
-
-    flashMessage(
-        "FLOOR CLEAR",
-        "#55e69b"
-    );
-
-    setTimeout(
-        () => {
-
-            openMap();
-
-        },
-
-        650
-    );
-
-}
-
-
-/* ============================================================
-   BOSS DEFEATED
-============================================================ */
-
-function defeatBoss() {
-
-    if(!game.boss)
-        return;
-
-    explode(
-        game.boss.x,
-        game.boss.y,
-        game.boss.color,
-        100
-    );
-
-    game.coins +=
-        100+
-        game.floor*25;
-
-    game.boss = null;
-
-    game.active = false;
-
-    flashMessage(
-        "BOSS DEFEATED",
-        "#ffc857"
-    );
-
-    setTimeout(
-        () => {
-
-            if(
-                game.floor >=
-                game.maxFloors
-            ) {
-
-                victory();
-
-            } else {
-
-                openMap();
-
-            }
-
-        },
-
-        700
-    );
-
-}
-
-
-/* ============================================================
-   PARTICLES
-============================================================ */
-
-function explode(
-    x,
-    y,
-    color,
-    count=18
-) {
-
-    if(
-        particleQuality ===
-        "LOW"
-    ) {
-
-        count =
-            Math.floor(
-                count*.35
-            );
-
-    }
-
-    if(
-        particleQuality ===
-        "MEDIUM"
-    ) {
-
-        count =
-            Math.floor(
-                count*.65
-            );
-
-    }
-
-
-    for(
-        let i=0;
-        i<count;
-        i++
-    ) {
-
-        const angle =
-            random(
-                0,
-                Math.PI*2
-            );
-
-        const speed =
-            random(
-                1,
-                7
-            );
-
-        game.particles.push({
-
-            x,
-            y,
-
-            vx:
-                Math.cos(angle)*
-                speed,
-
-            vy:
-                Math.sin(angle)*
-                speed,
-
-            life:
-                random(
-                    .2,
-                    .7
-                ),
-
-            size:
-                random(
-                    2,
-                    7
-                ),
-
-            color
-
-        });
-
-    }
-
-}
-
-
-/* ============================================================
-   DAMAGE TEXT
-============================================================ */
-
-function damageText(
-    x,
-    y,
-    text
-) {
-
-    game.texts.push({
-
-        x,
-        y,
-
-        text,
-
-        life: .7
-
-    });
-
-}
-
-
-/* ============================================================
-   MESSAGE
-============================================================ */
-
-function flashMessage(
-    text,
-    color
-) {
-
-    const element =
-        $("centerMessage");
-
-    element.textContent =
-        text;
-
-    element.style.color =
-        color;
-
-    element.style.opacity =
-        "1";
-
-    setTimeout(
-        () => {
-
-            element.style.opacity =
-                "0";
-
-        },
-
-        700
-    );
-
-}
-
-
-/* ============================================================
-   FX UPDATE
-============================================================ */
-
-function updateFX(dt) {
-
-    for(
-        let i =
-            game.particles.length-1;
-
-        i >= 0;
-
-        i--
-    ) {
-
-        const p =
-            game.particles[i];
-
-        p.life -=
-            dt;
-
-
-        if(p.ring) {
-
-            p.radius +=
-                (
-                    p.maxRadius-
-                    p.radius
-                )*.18;
-
-        } else {
-
-            p.x +=
-                p.vx*
-                dt*60;
-
-            p.y +=
-                p.vy*
-                dt*60;
-
-            p.vx *= .98;
-            p.vy *= .98;
-
-        }
-
-
-        if(
-            p.life <= 0
-        ) {
-
-            game.particles.splice(
-                i,
-                1
-            );
-
-        }
-
-    }
-
-
-    for(
-        let i =
-            game.slashes.length-1;
-
-        i >= 0;
-
-        i--
-    ) {
-
-        game.slashes[i].life -=
-            dt;
-
-        if(
-            game.slashes[i].life <= 0
-        ) {
-
-            game.slashes.splice(
-                i,
-                1
-            );
-
-        }
-
-    }
-
-
-    for(
-        let i =
-            game.texts.length-1;
-
-        i >= 0;
-
-        i--
-    ) {
-
-        const t =
-            game.texts[i];
-
-        t.life -=
-            dt;
-
-        t.y -=
-            25*dt;
-
-
-        if(
-            t.life <= 0
-        ) {
-
-            game.texts.splice(
-                i,
-                1
-            );
-
-        }
-
-    }
-
-}
-
-
-/* ============================================================
-   DRAW BACKGROUND
-============================================================ */
-
 function drawBackground() {
 
-    // Static background is cached by buildBackground().
-    ctx.drawImage(backgroundCanvas, 0, 0, W, H);
+  const gradient =
+    ctx.createRadialGradient(
+      canvas.width / 2,
+      canvas.height / 2,
+      0,
+      canvas.width / 2,
+      canvas.height / 2,
+      Math.max(
+        canvas.width,
+        canvas.height
+      ) * .7
+    );
 
+  gradient.addColorStop(
+    0,
+    "#151a38"
+  );
+
+  gradient.addColorStop(
+    .55,
+    "#080a18"
+  );
+
+  gradient.addColorStop(
+    1,
+    "#03040a"
+  );
+
+  ctx.fillStyle =
+    gradient;
+
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  drawGrid();
 }
 
+function drawGrid() {
 
-/* ============================================================
-   DRAW PLAYER
-============================================================ */
+  const size = 70;
 
-function drawPlayer() {
+  ctx.strokeStyle =
+    "rgba(139,92,246,.07)";
 
-    ctx.save();
+  ctx.lineWidth = 1;
 
-    ctx.translate(
-        player.x,
-        player.y
-    );
+  const offset =
+    (performance.now() / 80) %
+    size;
 
-
-    if(
-        player.invincible > 0
-    ) {
-
-        ctx.globalAlpha =
-            .5+
-            .3*
-            Math.sin(
-                performance.now()/30
-            );
-
-    }
-
-
-    ctx.fillStyle =
-        "rgba(0,0,0,.5)";
-
-    ctx.beginPath();
-
-    ctx.ellipse(
-        0,
-        20,
-        25,
-        8,
-        0,
-        0,
-        Math.PI*2
-    );
-
-    ctx.fill();
-
-
-    const angle =
-        Math.atan2(
-            mouse.y-player.y,
-            mouse.x-player.x
-        );
-
-
-    ctx.rotate(angle);
-
-
-    ctx.fillStyle =
-        "#dce5ff";
-
-    ctx.strokeStyle =
-        "#758cff";
-
-    ctx.lineWidth = 3;
-
-
-    ctx.beginPath();
-
-    ctx.arc(
-        0,
-        0,
-        player.radius,
-        0,
-        Math.PI*2
-    );
-
-    ctx.fill();
-
-    ctx.stroke();
-
-
-    ctx.strokeStyle =
-        "#ffffff";
-
-    ctx.lineWidth = 5;
+  for (
+    let x = -size;
+    x < canvas.width + size;
+    x += size
+  ) {
 
     ctx.beginPath();
 
     ctx.moveTo(
-        7,
-        0
+      x + offset,
+      0
     );
 
     ctx.lineTo(
-        34,
-        0
+      x + offset,
+      canvas.height
     );
 
     ctx.stroke();
 
+  }
 
-    ctx.restore();
+  for (
+    let y = -size;
+    y < canvas.height + size;
+    y += size
+  ) {
 
-}
+    ctx.beginPath();
 
-
-/* ============================================================
-   DRAW ENEMIES
-============================================================ */
-
-function drawEnemies() {
-
-    game.enemies.forEach(
-        enemy => {
-
-            ctx.save();
-
-            ctx.translate(
-                enemy.x,
-                enemy.y
-            );
-
-
-            ctx.fillStyle =
-                enemy.color+
-                "33";
-
-            ctx.beginPath();
-
-            ctx.arc(
-                0,
-                0,
-                enemy.radius*1.8,
-                0,
-                Math.PI*2
-            );
-
-            ctx.fill();
-
-
-            ctx.fillStyle =
-                "#111529";
-
-            ctx.strokeStyle =
-                enemy.color;
-
-            ctx.lineWidth = 3;
-
-
-            ctx.beginPath();
-
-            ctx.arc(
-                0,
-                0,
-                enemy.radius,
-                0,
-                Math.PI*2
-            );
-
-            ctx.fill();
-
-            ctx.stroke();
-
-
-            ctx.fillStyle =
-                enemy.color;
-
-            ctx.beginPath();
-
-            ctx.arc(
-                0,
-                0,
-                enemy.radius*.35,
-                0,
-                Math.PI*2
-            );
-
-            ctx.fill();
-
-
-            ctx.restore();
-
-        }
+    ctx.moveTo(
+      0,
+      y + offset
     );
 
+    ctx.lineTo(
+      canvas.width,
+      y + offset
+    );
+
+    ctx.stroke();
+
+  }
 }
 
+function worldToScreen(
+  x,
+  y,
+  me
+) {
 
-/* ============================================================
-   DRAW BOSS
-============================================================ */
+  return {
+    x:
+      x -
+      me.x +
+      canvas.width / 2,
 
-function drawBoss() {
+    y:
+      y -
+      me.y +
+      canvas.height / 2
+  };
 
-    const boss =
-        game.boss;
+}
 
-    if(!boss)
-        return;
+function drawPlayer(
+  player,
+  me
+) {
 
+  const pos =
+    worldToScreen(
+      player.x,
+      player.y,
+      me
+    );
+
+  const radius =
+    player.id === myId
+      ? 20
+      : 17;
+
+  ctx.save();
+
+  ctx.shadowBlur = 25;
+
+  ctx.shadowColor =
+    player.id === myId
+      ? "#8b5cf6"
+      : "#22d3ee";
+
+  ctx.fillStyle =
+    player.id === myId
+      ? "#8b5cf6"
+      : "#22d3ee";
+
+  ctx.beginPath();
+
+  ctx.arc(
+    pos.x,
+    pos.y,
+    radius,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle =
+    "rgba(255,255,255,.9)";
+
+  ctx.beginPath();
+
+  ctx.arc(
+    pos.x - 6,
+    pos.y - 7,
+    5,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+
+  ctx.fillStyle =
+    "#050711";
+
+  ctx.beginPath();
+
+  ctx.arc(
+    pos.x + 5,
+    pos.y - 2,
+    3,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+
+  ctx.restore();
+
+  drawName(
+    player.name,
+    pos.x,
+    pos.y - 32
+  );
+
+  if (
+    player.id !== myId
+  ) {
+
+    drawMiniBar(
+      pos.x,
+      pos.y - 27,
+      42,
+      5,
+      player.hp /
+      player.maxHp
+    );
+
+  }
+}
+
+function drawName(
+  name,
+  x,
+  y
+) {
+
+  ctx.font =
+    "700 11px system-ui";
+
+  ctx.textAlign =
+    "center";
+
+  ctx.fillStyle =
+    "rgba(255,255,255,.85)";
+
+  ctx.fillText(
+    name,
+    x,
+    y
+  );
+
+}
+
+function drawMiniBar(
+  x,
+  y,
+  width,
+  height,
+  percent
+) {
+
+  ctx.fillStyle =
+    "rgba(0,0,0,.6)";
+
+  ctx.fillRect(
+    x - width / 2,
+    y,
+    width,
+    height
+  );
+
+  ctx.fillStyle =
+    "#ef4444";
+
+  ctx.fillRect(
+    x - width / 2,
+    y,
+    width *
+    Math.max(
+      0,
+      Math.min(
+        1,
+        percent
+      )
+    ),
+    height
+  );
+
+}
+
+function drawEnemy(
+  enemy,
+  me
+) {
+
+  const pos =
+    worldToScreen(
+      enemy.x,
+      enemy.y,
+      me
+    );
+
+  if (
+    pos.x < -100 ||
+    pos.x >
+      canvas.width + 100 ||
+    pos.y < -100 ||
+    pos.y >
+      canvas.height + 100
+  ) {
+    return;
+  }
+
+  ctx.save();
+
+  ctx.shadowBlur = 20;
+  ctx.shadowColor =
+    enemy.color;
+
+  ctx.fillStyle =
+    enemy.color;
+
+  ctx.beginPath();
+
+  if (
+    enemy.type ===
+    "brute"
+  ) {
+
+    ctx.rect(
+      pos.x -
+        enemy.radius,
+      pos.y -
+        enemy.radius,
+      enemy.radius * 2,
+      enemy.radius * 2
+    );
+
+  } else {
+
+    ctx.arc(
+      pos.x,
+      pos.y,
+      enemy.radius,
+      0,
+      Math.PI * 2
+    );
+
+  }
+
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle =
+    "#090b15";
+
+  ctx.beginPath();
+
+  ctx.arc(
+    pos.x - 7,
+    pos.y - 4,
+    4,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.arc(
+    pos.x + 7,
+    pos.y - 4,
+    4,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+
+  ctx.restore();
+
+  drawMiniBar(
+    pos.x,
+    pos.y -
+      enemy.radius -
+      10,
+    48,
+    5,
+    enemy.hp /
+      enemy.maxHp
+  );
+
+}
+
+function drawBoss(
+  boss,
+  me
+) {
+
+  const pos =
+    worldToScreen(
+      boss.x,
+      boss.y,
+      me
+    );
+
+  const pulse =
+    1 +
+    Math.sin(
+      performance.now() / 220
+    ) * .06;
+
+  ctx.save();
+
+  ctx.translate(
+    pos.x,
+    pos.y
+  );
+
+  ctx.scale(
+    pulse,
+    pulse
+  );
+
+  ctx.shadowBlur = 60;
+
+  ctx.shadowColor =
+    boss.color;
+
+  ctx.fillStyle =
+    boss.color;
+
+  ctx.beginPath();
+
+  ctx.arc(
+    0,
+    0,
+    85,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle =
+    "#080914";
+
+  ctx.beginPath();
+
+  ctx.arc(
+    -25,
+    -15,
+    12,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.arc(
+    25,
+    -15,
+    12,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+
+  ctx.strokeStyle =
+    "rgba(255,255,255,.65)";
+
+  ctx.lineWidth = 4;
+
+  ctx.beginPath();
+
+  ctx.arc(
+    0,
+    0,
+    102,
+    -Math.PI / 2,
+    Math.PI * 1.5
+  );
+
+  ctx.stroke();
+
+  ctx.restore();
+
+  ctx.textAlign =
+    "center";
+
+  ctx.font =
+    "900 18px system-ui";
+
+  ctx.fillStyle =
+    "white";
+
+  ctx.fillText(
+    boss.name,
+    pos.x,
+    pos.y + 125
+  );
+
+}
+
+function drawProjectile(
+  projectile,
+  me
+) {
+
+  const pos =
+    worldToScreen(
+      projectile.x,
+      projectile.y,
+      me
+    );
+
+  ctx.save();
+
+  ctx.shadowBlur = 20;
+
+  ctx.shadowColor =
+    "#22d3ee";
+
+  ctx.fillStyle =
+    "#67e8f9";
+
+  ctx.beginPath();
+
+  ctx.arc(
+    pos.x,
+    pos.y,
+    8,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+
+  ctx.restore();
+
+}
+
+function drawEffects(
+  state,
+  me
+) {
+
+  for (
+    const effect of state.effects
+  ) {
+
+    const pos =
+      worldToScreen(
+        effect.x,
+        effect.y,
+        me
+      );
+
+    if (
+      effect.type ===
+      "hit" ||
+      effect.type ===
+      "bossHit"
+    ) {
+
+      const alpha =
+        Math.max(
+          0,
+          effect.life
+        );
+
+      ctx.save();
+
+      ctx.globalAlpha =
+        alpha;
+
+      ctx.strokeStyle =
+        effect.type ===
+        "bossHit"
+          ? "#facc15"
+          : "#fff";
+
+      ctx.lineWidth = 3;
+
+      ctx.beginPath();
+
+      ctx.arc(
+        pos.x,
+        pos.y,
+        20 +
+          (1 -
+            alpha) *
+            35,
+        0,
+        Math.PI * 2
+      );
+
+      ctx.stroke();
+
+      ctx.font =
+        "900 15px system-ui";
+
+      ctx.textAlign =
+        "center";
+
+      ctx.fillStyle =
+        "#fff";
+
+      ctx.fillText(
+        `-${effect.amount}`,
+        pos.x,
+        pos.y -
+          25 -
+          (1 - alpha) *
+            20
+      );
+
+      ctx.restore();
+
+    }
+
+    if (
+      effect.type ===
+      "shock"
+    ) {
+
+      ctx.save();
+
+      ctx.globalAlpha =
+        Math.max(
+          0,
+          effect.life
+        );
+
+      ctx.strokeStyle =
+        "#facc15";
+
+      ctx.lineWidth = 5;
+
+      ctx.beginPath();
+
+      ctx.arc(
+        pos.x,
+        pos.y,
+        70 +
+          (1 -
+            effect.life) *
+            300,
+        0,
+        Math.PI * 2
+      );
+
+      ctx.stroke();
+
+      ctx.restore();
+
+    }
+
+  }
+
+}
+
+function render() {
+
+  requestAnimationFrame(
+    render
+  );
+
+  drawBackground();
+
+  if (
+    !roomState ||
+    gameScreen.classList.contains(
+      "hidden"
+    )
+  ) {
+    return;
+  }
+
+  const me =
+    roomState.players.find(
+      player =>
+        player.id === myId
+    );
+
+  if (!me) return;
+
+  for (
+    const projectile of
+    roomState.projectiles
+  ) {
+
+    drawProjectile(
+      projectile,
+      me
+    );
+
+  }
+
+  for (
+    const enemy of
+    roomState.enemies
+  ) {
+
+    drawEnemy(
+      enemy,
+      me
+    );
+
+  }
+
+  if (
+    roomState.boss
+  ) {
+
+    drawBoss(
+      roomState.boss,
+      me
+    );
+
+  }
+
+  for (
+    const player of
+    roomState.players
+  ) {
+
+    if (
+      player.alive
+    ) {
+
+      drawPlayer(
+        player,
+        me
+      );
+
+    }
+
+  }
+
+  drawEffects(
+    roomState,
+    me
+  );
+
+  /* AIM RETICLE */
+
+  if (
+    mouse.x ||
+    mouse.y
+  ) {
 
     ctx.save();
 
-    ctx.translate(
-        boss.x,
-        boss.y
-    );
-
-
-    const pulse =
-        1+
-        Math.sin(
-            performance.now()/250
-        )*.05;
-
-
-    const aura =
-        ctx.createRadialGradient(
-            0,
-            0,
-            5,
-            0,
-            0,
-            boss.radius*2.5
-        );
-
-    aura.addColorStop(
-        0,
-        boss.color+
-        "66"
-    );
-
-    aura.addColorStop(
-        1,
-        boss.color+
-        "00"
-    );
-
-
-    ctx.fillStyle =
-        aura;
-
-    ctx.beginPath();
-
-    ctx.arc(
-        0,
-        0,
-        boss.radius*2.5,
-        0,
-        Math.PI*2
-    );
-
-    ctx.fill();
-
-
-    ctx.rotate(
-        performance.now()/3000
-    );
-
     ctx.strokeStyle =
-        boss.color;
+      "rgba(255,255,255,.5)";
 
-    ctx.lineWidth = 3;
-
-    ctx.globalAlpha =
-        .6;
-
+    ctx.lineWidth = 1;
 
     ctx.beginPath();
 
     ctx.arc(
-        0,
-        0,
-        boss.radius*1.4,
-        0,
-        Math.PI*1.5
+      mouse.x,
+      mouse.y,
+      9,
+      0,
+      Math.PI * 2
     );
 
     ctx.stroke();
 
-
-    ctx.globalAlpha = 1;
-
-
-    ctx.scale(
-        pulse,
-        pulse
-    );
-
-
-    ctx.fillStyle =
-        "#11162a";
-
-    ctx.strokeStyle =
-        boss.color;
-
-    ctx.lineWidth = 4;
-
-
     ctx.beginPath();
 
-    ctx.arc(
-        0,
-        0,
-        boss.radius,
-        0,
-        Math.PI*2
+    ctx.moveTo(
+      mouse.x - 14,
+      mouse.y
     );
 
-    ctx.fill();
+    ctx.lineTo(
+      mouse.x + 14,
+      mouse.y
+    );
+
+    ctx.moveTo(
+      mouse.x,
+      mouse.y - 14
+    );
+
+    ctx.lineTo(
+      mouse.x,
+      mouse.y + 14
+    );
 
     ctx.stroke();
 
-
-    const core =
-        ctx.createRadialGradient(
-            0,
-            0,
-            2,
-            0,
-            0,
-            boss.radius*.65
-        );
-
-    core.addColorStop(
-        0,
-        "#ffffff"
-    );
-
-    core.addColorStop(
-        .2,
-        boss.color
-    );
-
-    core.addColorStop(
-        1,
-        boss.color+
-        "00"
-    );
-
-
-    ctx.fillStyle =
-        core;
-
-    ctx.beginPath();
-
-    ctx.arc(
-        0,
-        0,
-        boss.radius*.65,
-        0,
-        Math.PI*2
-    );
-
-    ctx.fill();
-
-
-    ctx.fillStyle =
-        "#ffffff";
-
-
-    ctx.beginPath();
-
-    ctx.arc(
-        -boss.radius*.3,
-        -boss.radius*.12,
-        5,
-        0,
-        Math.PI*2
-    );
-
-    ctx.arc(
-        boss.radius*.3,
-        -boss.radius*.12,
-        5,
-        0,
-        Math.PI*2
-    );
-
-    ctx.fill();
-
-
     ctx.restore();
 
-}
-
-
-/* ============================================================
-   DRAW PROJECTILES
-============================================================ */
-
-function drawProjectiles() {
-
-    game.projectiles.forEach(
-        p => {
-
-            const gradient =
-                ctx.createRadialGradient(
-                    p.x,
-                    p.y,
-                    1,
-                    p.x,
-                    p.y,
-                    p.radius*3
-                );
-
-            gradient.addColorStop(
-                0,
-                p.color
-            );
-
-            gradient.addColorStop(
-                1,
-                p.color+
-                "00"
-            );
-
-
-            ctx.fillStyle =
-                gradient;
-
-            ctx.beginPath();
-
-            ctx.arc(
-                p.x,
-                p.y,
-                p.radius*3,
-                0,
-                Math.PI*2
-            );
-
-            ctx.fill();
-
-
-            ctx.fillStyle =
-                p.color;
-
-            ctx.beginPath();
-
-            ctx.arc(
-                p.x,
-                p.y,
-                p.radius,
-                0,
-                Math.PI*2
-            );
-
-            ctx.fill();
-
-        }
-    );
+  }
 
 }
 
-
-/* ============================================================
-   DRAW FX
-============================================================ */
-
-function drawFX() {
-
-    game.particles.forEach(
-        p => {
-
-            ctx.globalAlpha =
-                Math.max(
-                    0,
-                    p.life/.7
-                );
-
-
-            if(p.ring) {
-
-                ctx.strokeStyle =
-                    p.color;
-
-                ctx.lineWidth = 3;
-
-                ctx.beginPath();
-
-                ctx.arc(
-                    p.x,
-                    p.y,
-                    p.radius,
-                    0,
-                    Math.PI*2
-                );
-
-                ctx.stroke();
-
-            } else {
-
-                ctx.fillStyle =
-                    p.color;
-
-                ctx.fillRect(
-                    p.x-p.size/2,
-                    p.y-p.size/2,
-                    p.size,
-                    p.size
-                );
-
-            }
-
-        }
-    );
-
-
-    ctx.globalAlpha = 1;
-
-
-    game.slashes.forEach(
-        slash => {
-
-            ctx.save();
-
-            ctx.translate(
-                slash.x,
-                slash.y
-            );
-
-            ctx.rotate(
-                slash.angle
-            );
-
-            ctx.globalAlpha =
-                slash.life/
-                slash.maxLife;
-
-            ctx.strokeStyle =
-                "#ffffff";
-
-            ctx.lineWidth = 8;
-
-            ctx.shadowBlur = 20;
-
-            ctx.shadowColor =
-                "#aabaff";
-
-
-            ctx.beginPath();
-
-            ctx.arc(
-                0,
-                0,
-                82,
-                -.65,
-                .65
-            );
-
-            ctx.stroke();
-
-            ctx.restore();
-
-        }
-    );
-
-
-    game.texts.forEach(
-        text => {
-
-            ctx.globalAlpha =
-                text.life;
-
-            ctx.fillStyle =
-                "#ffffff";
-
-            ctx.font =
-                "bold 17px Orbitron";
-
-            ctx.textAlign =
-                "center";
-
-            ctx.fillText(
-                text.text,
-                text.x,
-                text.y
-            );
-
-        }
-    );
-
-
-    ctx.globalAlpha = 1;
-
-}
-
-
-/* ============================================================
-   HUD
-============================================================ */
-
-function updateHUD() {
-
-    $("coinAmount")
-        .textContent =
-        game.coins;
-
-    $("playerHP")
-        .style.width =
-        (
-            player.hp/
-            player.maxHp*
-            100
-        )+"%";
-
-    $("mana")
-        .style.width =
-        (
-            player.mana/
-            player.maxMana*
-            100
-        )+"%";
-
-}
-
-
-/* ============================================================
-   UTILITY
-============================================================ */
-
-function distance(a,b) {
-
-    return Math.hypot(
-        a.x-b.x,
-        a.y-b.y
-    );
-
-}
-
-
-function hasCard(name) {
-
-    return game.cards.some(
-        card =>
-            card.name ===
-            name
-    );
-
-}
-
-
-function getCardValue(stat) {
-
-    const card =
-        game.cards.find(
-            c =>
-                c.stat ===
-                stat
-        );
-
-    return card
-        ? card.value
-        : 0;
-
-}
-
-
-/* ============================================================
-   RUN WIPE
-============================================================ */
-function wipeRunProgress(){
-    game.floor=0;game.coins=0;game.kills=0;game.cards=[];game.abilities=[];game.weapons=[];
-    game.equippedAbility=null;game.equippedWeapon=null;game.floorTypes=[];game.currentFloorType=null;
-    player.maxHp=100;player.maxMana=100;player.speed=4.1;player.damageMultiplier=1;
-    player.weaponDamage=55;player.weaponRange=125;player.weaponCooldown=.22;player.weaponColor="#758cff";
-    resetPlayer();
-}
-
-/* ============================================================
-   END STATES
-============================================================ */
-
-function victory() {
-    const summary={floors:game.maxFloors,kills:game.kills,cards:game.cards.length,coins:game.coins};
-    wipeRunProgress();
-
-    game.active = false;
-    game.paused = false;
-    game.enemies = [];
-    game.boss = null;
-    game.projectiles = [];
-    game.particles = [];
-    game.slashes = [];
-    game.texts = [];
-
-    $("hud")
-        .classList
-        .add("hidden");
-
-    $("resultTitle")
-        .textContent =
-        "ASCENSION COMPLETE";
-
-    $("resultTitle")
-        .style.color =
-        "#ffc857";
-
-    $("resultText")
-        .innerHTML = `
-
-            You conquered all
-            ${summary.floors}
-            floors.<br><br>
-
-            Enemies defeated:
-            ${summary.kills}<br>
-
-            Cards collected:
-            ${summary.cards}<br>
-
-            Final shards:
-            ◆ ${summary.coins}
-
-        `;
-
-    showScreen(
-        "resultScreen"
-    );
-
-}
-
-
-function defeat() {
-    const summary={floor:game.floor,kills:game.kills,coins:game.coins};
-    wipeRunProgress();
-
-    game.active = false;
-    game.paused = false;
-    game.enemies = [];
-    game.boss = null;
-    game.projectiles = [];
-    game.particles = [];
-    game.slashes = [];
-    game.texts = [];
-
-    $("hud")
-        .classList
-        .add("hidden");
-
-    $("resultTitle")
-        .textContent =
-        "RUN ENDED";
-
-    $("resultTitle")
-        .style.color =
-        "#ff4268";
-
-    $("resultText")
-        .innerHTML = `
-
-            You reached floor
-            ${summary.floor}.<br><br>
-
-            Enemies defeated:
-            ${summary.kills}<br>
-
-            Shards:
-            ◆ ${summary.coins}
-
-        `;
-
-    showScreen(
-        "resultScreen"
-    );
-
-}
-
-
-/* ============================================================
-   RESULT BUTTONS
-============================================================ */
-
-$("newRunButton")
-    .addEventListener(
-        "click",
-        startRun
-    );
-
-
-$("resultMenuButton")
-    .addEventListener(
-        "click",
-        () => {
-
-            game.active = false;
-
-            showScreen(
-                "mainMenu"
-            );
-
-        }
-    );
-
-
-/* ============================================================
-   GAME LOOP
-============================================================ */
-
-let previousTime =
-    performance.now();
-
-let animationFrameId = null;
-let loopRunning = false;
-
-function gameLoop(time) {
-
-    const dt =
-        Math.min(
-            .033,
-            (time-previousTime)/1000
-        );
-
-    previousTime =
-        time;
-
-
-    if(
-        game.active &&
-        !game.paused
-    ) {
-
-        updatePlayer(dt);
-
-        if(
-            game.currentFloorType ===
-            "enemy"
-        ) {
-
-            updateEnemies(dt);
-
-        }
-
-        if(
-            game.currentFloorType ===
-            "boss"
-        ) {
-
-            updateBoss(dt);
-
-        }
-
-        updateProjectiles(dt);
-
-        updateFX(dt);
-
-        updateHUD();
-
-    } else {
-
-        updateFX(dt);
-
-    }
-
-
-    draw();
-
-
-    animationFrameId = requestAnimationFrame(gameLoop);
-
-}
-
-
-/* ============================================================
-   DRAW
-============================================================ */
-
-function draw() {
-
-    ctx.save();
-
-
-    if(
-        game.shake >
-        .2 &&
-        screenShake
-    ) {
-
-        ctx.translate(
-            random(
-                -game.shake,
-                game.shake
-            ),
-
-            random(
-                -game.shake,
-                game.shake
-            )
-        );
-
-        game.shake *=
-            .88;
-
-    }
-
-
-    drawBackground();
-
-
-    if(
-        game.active ||
-        game.boss
-    ) {
-
-        drawProjectiles();
-
-        drawEnemies();
-
-        drawBoss();
-
-        drawPlayer();
-
-        drawFX();
-
-    }
-
-
-    ctx.restore();
-
-}
-
-
-/* ============================================================
-   INITIALIZE
-============================================================ */
-
-renderKeybinds();
-
-updateHUD();
-
-if (!loopRunning) {
-    loopRunning = true;
-    previousTime = performance.now();
-    animationFrameId = requestAnimationFrame(gameLoop);
-}
-
+render();
 </script>
 
 </body>
